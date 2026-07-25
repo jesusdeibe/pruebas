@@ -14994,12 +14994,14 @@ async function renderMobileDashboard() {
                 </div>
             </div>
 
-            <div id="mobile-runway-container" style="margin-top: 25px;"></div>
+            <div id="mobile-upcoming-expenses" style="margin-top: 25px;"></div>
+            <div id="mobile-recent-activity" style="margin-top: 25px;"></div>
         </div>
     `;
 
     renderMobileNavigation('dashboard');
-    renderMobileRunway();
+    renderMobileUpcomingExpenses();
+    renderMobileRecentActivity();
 }
 
 function updateMobileDashboardMode(mode) {
@@ -15074,21 +15076,124 @@ function toggleAccountBreakdown() {
   badge.style.transform = isActive ? 'scale(1.05)' : 'scale(1)';
 }
 
-async function renderMobileRunway() {
-    const runway = await calculateRunway();
-    const container = document.getElementById('mobile-runway-container');
+// Tarjeta: próximos gastos fijos del mes (sin pagar aún), ordenados por día
+async function renderMobileUpcomingExpenses() {
+    const data = await getData();
+    const container = document.getElementById('mobile-upcoming-expenses');
     if (!container) return;
 
-    container.innerHTML = `
-        <div style="background: var(--primary); color: white; padding: 25px; border-radius: 30px; position: relative; overflow: hidden;">
-            <div style="position: absolute; right: -20px; top: -20px; font-size: 100px; opacity: 0.1;">🚀</div>
-            <div style="position: relative; z-index: 1;">
-                <div style="font-size: 11px; font-weight: 800; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">Libertad Financiera</div>
-                <div style="font-size: 32px; font-weight: 900; margin: 10px 0;">${runway.lifestyleMonths.toFixed(1)} meses</div>
-                <div style="font-size: 13px; font-weight: 600; opacity: 0.9;">
-                    Cubriendo tu estilo de vida actual
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    const monthKey = `${month}-${year}`;
+    const paidIds = (data.fixedExpensesPaid || {})[monthKey] || [];
+    const todayDate = now.getDate();
+
+    const upcoming = (data.fixedExpenses || [])
+        .filter(e => (e.months || [0,1,2,3,4,5,6,7,8,9,10,11]).includes(month))
+        .filter(e => !paidIds.includes(e.id))
+        .sort((a, b) => (a.day || 99) - (b.day || 99));
+
+    const visible = upcoming.slice(0, 4);
+
+    const rowsHtml = visible.length === 0
+        ? `<div style="text-align: center; padding: 10px 0; font-size: 13px; color: var(--text-tertiary);">Ya no quedan gastos fijos pendientes este mes 🎉</div>`
+        : visible.map(exp => {
+            const isOverdue = (exp.day || 0) < todayDate;
+            return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F0F2F5;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background: ${isOverdue ? '#FFF0F0' : '#F8F9FB'}; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <span style="font-size: 13px; font-weight: 900; color: ${isOverdue ? '#F26464' : 'var(--text-primary)'};">${exp.day || '-'}</span>
+                        </div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${exp.name}</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); font-weight: 600;">${exp.account || ''}${isOverdue ? ' · Atrasado' : ''}</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 800; color: var(--text-primary);">
+                        ${formatCurrency(exp.amount)}
+                    </div>
                 </div>
+            `;
+        }).join('');
+
+    container.innerHTML = `
+        <div style="background: white; padding: 22px; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary);">Próximos gastos fijos</h3>
+                <span onclick="switchMobileView('inversiones')" style="font-size: 12px; font-weight: 700; color: var(--primary); cursor: pointer;">Ver todos</span>
             </div>
+            ${rowsHtml}
+        </div>
+    `;
+}
+
+// Tarjeta: actividad reciente (gastos, ingresos e inversiones/transferencias)
+async function renderMobileRecentActivity() {
+    const data = await getData();
+    const container = document.getElementById('mobile-recent-activity');
+    if (!container) return;
+
+    const brokerAccountNames = data.accounts.filter(a => a.type === 'Broker').map(a => a.name);
+
+    let activity = (data.transactions || []).map(t => ({
+        date: t.date,
+        title: t.description || t.category || 'Movimiento',
+        amount: t.amount,
+        kind: t.type === 'Ingreso' ? 'ingreso' : 'gasto',
+    }));
+
+    activity = activity.concat((data.transfers || []).map(tr => {
+        const isInvestment = brokerAccountNames.includes(tr.to);
+        return {
+            date: tr.date,
+            title: tr.concept || (isInvestment ? `Aportación a ${tr.to}` : `Transferencia a ${tr.to}`),
+            amount: tr.amount,
+            kind: isInvestment ? 'inversion' : 'transferencia',
+        };
+    }));
+
+    activity.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const visible = activity.slice(0, 6);
+
+    const iconFor = (kind) => {
+        if (kind === 'ingreso') return { emoji: '💰', color: '#10B981' };
+        if (kind === 'inversion') return { emoji: '📈', color: '#3B82F6' };
+        if (kind === 'transferencia') return { emoji: '🔄', color: '#A1A5B7' };
+        return { emoji: '🛒', color: 'var(--text-primary)' };
+    };
+
+    const rowsHtml = visible.length === 0
+        ? `<div style="text-align: center; padding: 10px 0; font-size: 13px; color: var(--text-tertiary);">Todavía no hay movimientos</div>`
+        : visible.map(a => {
+            const style = iconFor(a.kind);
+            const isNegative = a.kind === 'gasto';
+            return `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F0F2F5;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background: #F8F9FB; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                            ${style.emoji}
+                        </div>
+                        <div>
+                            <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);">${a.title}</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); font-weight: 600;">${new Date(a.date).toLocaleDateString('es-ES')}</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 800; color: ${style.color};">
+                        ${isNegative ? '-' : '+'}${formatCurrency(Math.abs(a.amount))}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    container.innerHTML = `
+        <div style="background: white; padding: 22px; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary);">Actividad reciente</h3>
+                <span onclick="switchMobileView('monthly')" style="font-size: 12px; font-weight: 700; color: var(--primary); cursor: pointer;">Ver todos</span>
+            </div>
+            ${rowsHtml}
         </div>
     `;
 }
