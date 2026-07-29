@@ -3592,20 +3592,18 @@ body.privacy-mode #dashboard-runway-value {
     }
 
     body, html { 
-        height: 100%;
+        height: auto;
+        min-height: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden !important; 
+        overflow-x: hidden;
+        overflow-y: visible;
         background-color: #F8F9FB;
     }
 
     #mobile-root { 
         display: block !important;
-        /* Usamos dvh para que el navegador móvil no corte la parte de abajo */
-        height: 100dvh; 
         width: 100vw;
-        overflow-y: auto !important; 
-        -webkit-overflow-scrolling: touch;
         position: relative;
     }
 
@@ -15204,7 +15202,6 @@ function setupMobileShell() {
   if (sidebar) sidebar.style.display = 'none';
   
   document.body.style.display = 'block'; // Quitamos el flex de escritorio
-  document.body.style.overflow = 'hidden'; 
   document.body.style.background = '#F8F9FB'; // Fondo App limpia
 
   // 2. Creamos un contenedor raíz exclusivo para el móvil si no existe
