@@ -3741,31 +3741,100 @@ body.privacy-mode #dashboard-runway-value {
 }
 
 .account-breakdown.active {
-    max-height: 600px; /* Suficiente para varias cuentas */
+    max-height: 900px; /* Suficiente para varias cuentas */
     opacity: 1;
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid #F0F2F5;
 }
 
-/* Item de cuenta dentro del desglose */
-.breakdown-item {
+/* Control de orden de cuentas */
+.mobile-sort-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.mobile-sort-pill {
+    border: none;
+    background: #F8F9FB;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 20px;
+    display: flex;
     align-items: center;
-    padding: 8px 0;
+    gap: 5px;
 }
 
-.breakdown-item span:first-child {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
+.mobile-sort-pill.active {
+    background: var(--primary);
+    color: white;
 }
 
-.breakdown-item span:last-child {
+/* Fila visual de cada cuenta dentro del desglose */
+.mobile-account-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    cursor: pointer;
+}
+
+.mobile-account-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.mobile-account-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile-account-name {
     font-size: 13px;
     font-weight: 700;
     color: var(--text-primary);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile-account-bar-track {
+    width: 100%;
+    height: 5px;
+    background: #F0F2F5;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.mobile-account-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+
+.mobile-account-balance {
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.mobile-account-chevron {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+    opacity: 0.6;
 }
 
 /* Estilo de alerta tipo Notificación */
@@ -14913,6 +14982,90 @@ function shareWishlist() {
 
 let mobileDashboardMode = 'personal'; // 'personal' o 'shared'
 
+let mobileAccountSortMode = (function () {
+    try {
+        return localStorage.getItem('mobileAccountSortMode') || 'balance-desc';
+    } catch (e) {
+        return 'balance-desc';
+    }
+})();
+
+function setMobileAccountSort(mode) {
+    mobileAccountSortMode = mode;
+    try { localStorage.setItem('mobileAccountSortMode', mode); } catch (e) {}
+    renderMobileDashboard();
+}
+
+// Ficha de detalle de una cuenta: saldo + últimos movimientos
+async function openMobileAccountDetail(accountName) {
+    const data = await getData();
+    const acc = data.accounts.find(a => a.name === accountName);
+    if (!acc) return;
+
+    const balance = await calculateAccountBalance(accountName);
+
+    const txns = (data.transactions || [])
+        .filter(t => t.account === accountName)
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 15);
+
+    const rowsHtml = txns.length === 0
+        ? `<div style="text-align:center; padding:30px 0; color:var(--text-tertiary); font-size:13px;">Todavía no hay movimientos en esta cuenta</div>`
+        : txns.map(t => {
+            const isIncome = t.type === 'Ingreso';
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #F0F2F5;">
+                    <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                        <div style="width:38px; height:38px; background:#F8F9FB; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;">
+                            ${isIncome ? '💰' : '🛒'}
+                        </div>
+                        <div style="min-width:0;">
+                            <div style="font-size:14px; font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.description || t.category || 'Movimiento'}</div>
+                            <div style="font-size:11px; color:var(--text-tertiary); font-weight:600;">${new Date(t.date).toLocaleDateString('es-ES')}${t.category ? ' · ' + t.category : ''}</div>
+                        </div>
+                    </div>
+                    <div style="font-size:14px; font-weight:800; color:${isIncome ? '#10B981' : 'var(--text-primary)'}; flex-shrink:0; padding-left:10px;">
+                        ${isIncome ? '+' : '-'}${formatCurrency(Math.abs(t.amount))}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    let modal = document.getElementById('mobile-account-detail-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'mobile-account-detail-modal';
+        modal.className = 'modal-overlay';
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header" style="border:none;">
+                <div>
+                    <h3 class="modal-title" style="margin-bottom:2px;">${acc.name}</h3>
+                    <div style="font-size:12px; color:var(--text-tertiary); font-weight:600;">${acc.type || ''}</div>
+                </div>
+                <button class="close-btn" onclick="closeMobileAccountDetail()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align:center; margin: 6px 0 22px 0;">
+                    <div style="font-size:11px; font-weight:800; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:1px;">Saldo actual</div>
+                    <div style="font-size:32px; font-weight:900; color:${balance < 0 ? '#F26464' : 'var(--text-primary)'};">${formatCurrency(balance)}</div>
+                </div>
+                <div style="font-size:11px; font-weight:800; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Últimos movimientos</div>
+                ${rowsHtml}
+            </div>
+        </div>
+    `;
+    modal.classList.add('active');
+}
+
+function closeMobileAccountDetail() {
+    const modal = document.getElementById('mobile-account-detail-modal');
+    if (modal) modal.classList.remove('active');
+}
+
 async function renderMobileDashboard() {
     const data = await getData();
     const container = document.getElementById('mobile-content');
@@ -14937,12 +15090,65 @@ async function renderMobileDashboard() {
     });
 
     let total = 0;
-    let breakdownHtml = '';
+    let accountsWithBalance = [];
     for (const acc of filteredAccounts) {
         const bal = await calculateAccountBalance(acc.name);
         total += bal;
-        breakdownHtml += `<div class="breakdown-item"><span>${acc.name}</span><span>${formatCurrency(bal)}</span></div>`;
+        accountsWithBalance.push({ acc, bal });
     }
+
+    // Orden elegido por el usuario (se recuerda entre sesiones)
+    if (mobileAccountSortMode === 'balance-asc') {
+        accountsWithBalance.sort((a, b) => a.bal - b.bal);
+    } else if (mobileAccountSortMode === 'name') {
+        accountsWithBalance.sort((a, b) => a.acc.name.localeCompare(b.acc.name));
+    } else {
+        accountsWithBalance.sort((a, b) => b.bal - a.bal); // balance-desc (por defecto)
+    }
+
+    const maxAbsBalance = Math.max(1, ...accountsWithBalance.map(x => Math.abs(x.bal)));
+    const ACCOUNT_TYPE_ICONS = {
+        'Cuenta Corriente': 'fa-wallet',
+        'Cuenta Ahorro': 'fa-piggy-bank',
+        'Cuenta Compartida': 'fa-people-arrows',
+        'Broker': 'fa-chart-line',
+        'Exchange Crypto': 'fa-coins',
+    };
+
+    const sortPill = (mode, label) => `
+        <button class="mobile-sort-pill ${mobileAccountSortMode === mode ? 'active' : ''}" onclick="event.stopPropagation(); setMobileAccountSort('${mode}')">${label}</button>
+    `;
+
+    const breakdownHtml = `
+        <div class="mobile-sort-row">
+            ${sortPill('balance-desc', 'Saldo ↓')}
+            ${sortPill('balance-asc', 'Saldo ↑')}
+            ${sortPill('name', 'A-Z')}
+        </div>
+        ${accountsWithBalance.map(({ acc, bal }) => {
+            const pct = Math.min(100, Math.round((Math.abs(bal) / maxAbsBalance) * 100));
+            const iconClass = ACCOUNT_TYPE_ICONS[acc.type] || 'fa-building-columns';
+            const color = acc.color || '#214589';
+            const safeName = (acc.name || '').replace(/'/g, "\\'");
+            return `
+                <div class="mobile-account-row" onclick="openMobileAccountDetail('${safeName}')">
+                    <div class="mobile-account-icon" style="background:${color}22; color:${color};">
+                        <i class="fas ${iconClass}"></i>
+                    </div>
+                    <div class="mobile-account-info">
+                        <div class="mobile-account-name">${acc.name}</div>
+                        <div class="mobile-account-bar-track">
+                            <div class="mobile-account-bar-fill" style="width:${pct}%; background:${color};"></div>
+                        </div>
+                    </div>
+                    <div class="mobile-account-balance" style="color:${bal < 0 ? '#F26464' : 'var(--text-primary)'};">
+                        ${formatCurrency(bal)}
+                    </div>
+                    <i class="fas fa-chevron-right mobile-account-chevron"></i>
+                </div>
+            `;
+        }).join('')}
+    `;
 
     // 3. RENDER UI
     container.innerHTML = `
