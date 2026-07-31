@@ -16590,7 +16590,7 @@ function getPublicPrioColors(prio) {
     return Math.max(0, new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() - today.getDate());
   }
 
-  async function renderMobileDashboard() {
+  async function renderMobileDashboardV200() {
     const data = await getData();
     const container = document.getElementById('mobile-content');
     if (!container) return;
@@ -16639,7 +16639,6 @@ function getPublicPrioColors(prio) {
     document.head.appendChild(style);
   })();
 
-  const renderMobileDashboardV200 = renderMobileDashboard;
   async function renderMobileDashboard() {
     await renderMobileDashboardV200();
     const card = document.querySelector('.cf2-available');
