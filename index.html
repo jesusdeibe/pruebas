@@ -16595,7 +16595,8 @@ function getPublicPrioColors(prio) {
     const container = document.getElementById('mobile-content');
     if (!container) return;
     const accounts = data.accounts || [];
-    const personalLiquid = accounts.filter(a => !(a.isShared || a.is_shared || a.type === 'Compartida' || a.type === 'Broker'));
+    // La marca de Configuración es la única fuente de verdad para "Disponible".
+    const personalLiquid = accounts.filter(a => a.isDisposable === true || a.isDisposable === 'true' || a.is_disposable === true || a.is_disposable === 'true');
     const personalAll = accounts.filter(a => !(a.isShared || a.is_shared || a.type === 'Compartida'));
     const balanceByName = {};
     for (const acc of accounts) balanceByName[acc.name] = await calculateAccountBalance(acc.name);
@@ -16644,13 +16645,13 @@ function getPublicPrioColors(prio) {
     const card = document.querySelector('.cf2-available');
     if (!card) return;
     const data = await getData();
-    const liquidAccounts = (data.accounts || []).filter(a => !(a.isShared || a.is_shared || a.type === 'Compartida' || a.type === 'Broker'));
+    const liquidAccounts = (data.accounts || []).filter(a => a.isDisposable === true || a.isDisposable === 'true' || a.is_disposable === true || a.is_disposable === 'true');
     const rows = [];
     for (const account of liquidAccounts) {
       const balance = await calculateAccountBalance(account.name);
       rows.push(`<div class="cf201-breakdown-row" onclick="openMobileAccountDetail('${(account.name || '').replace(/'/g, "\\'")}')"><span class="cf201-breakdown-name"><i class="fas fa-wallet"></i>${account.name}</span><span class="cf201-breakdown-value" style="color:${balance < 0 ? '#ef6464' : 'var(--text-primary)'}">${formatCurrency(balance)}</span></div>`);
     }
-    card.insertAdjacentHTML('beforeend', `<button class="cf201-breakdown-toggle" id="cf201-breakdown-button" onclick="toggleAvailableBreakdown()">Ver desglose por cuentas <i class="fas fa-chevron-down"></i></button><div class="cf201-available-breakdown" id="cf201-available-breakdown">${rows.length ? rows.join('') : '<div class="cf201-breakdown-note">No hay cuentas de efectivo disponibles.</div>'}<div class="cf201-breakdown-note">Disponible suma las cuentas personales de efectivo. No incluye cuentas compartidas ni brokers/inversiones.</div></div>`);
+    card.insertAdjacentHTML('beforeend', `<button class="cf201-breakdown-toggle" id="cf201-breakdown-button" onclick="toggleAvailableBreakdown()">Ver desglose por cuentas <i class="fas fa-chevron-down"></i></button><div class="cf201-available-breakdown" id="cf201-available-breakdown">${rows.length ? rows.join('') : '<div class="cf201-breakdown-note">No hay cuentas marcadas como disponible.</div>'}<div class="cf201-breakdown-note">Solo se suman las cuentas que has marcado como “Disponible” en Configuración.</div></div>`);
   }
   function toggleAvailableBreakdown() { const panel=document.getElementById('cf201-available-breakdown'),button=document.getElementById('cf201-breakdown-button'); if(!panel||!button)return; const open=panel.classList.toggle('open');button.classList.toggle('open',open);button.firstChild.textContent=open?'Ocultar desglose por cuentas ':'Ver desglose por cuentas '; }
   function renderMobileNavigation(activeView='dashboard') { const nav=document.getElementById('mobile-nav-container');if(!nav)return;nav.innerHTML=`<nav class="mobile-nav" aria-label="Navegación principal"><div class="mobile-nav-item ${activeView==='dashboard'?'active':''}" onclick="switchMobileView('dashboard')"><i class="fas fa-house"></i><span>Inicio</span></div><div class="mobile-nav-item ${activeView==='accounts'?'active':''}" onclick="switchMobileView('accounts')"><i class="fas fa-wallet"></i><span>Cuentas</span></div><div class="nav-add-btn" onclick="toggleQuickMenu()" aria-label="Añadir movimiento"><i class="fas fa-plus" id="plus-icon"></i></div><div class="mobile-nav-item ${activeView==='inversiones'?'active':''}" onclick="switchMobileView('inversiones')"><i class="fas fa-chart-line"></i><span>Patrimonio</span></div><div class="mobile-nav-item ${activeView==='settings'?'active':''}" onclick="switchMobileView('settings')"><i class="fas fa-ellipsis"></i><span>Más</span></div></nav>`; }
