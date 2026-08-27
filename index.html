@@ -16951,7 +16951,7 @@ function getPublicPrioColors(prio) {
   };
   renderMobileNavigation=function(activeView='dashboard'){
     const nav=document.getElementById('mobile-nav-container');if(!nav)return;
-    const planActive=['plan','monthly','budgets','receipts'].includes(activeView);
+    const planActive=['plan','monthly','receipts'].includes(activeView);
     const accountActive=['accounts','inversiones'].includes(activeView);
     nav.innerHTML=`<nav class="mobile-nav" aria-label="Navegación principal"><div class="mobile-nav-item ${activeView==='dashboard'?'active':''}" onclick="switchMobileView('dashboard')"><i class="fas fa-house"></i><span>Inicio</span></div><div class="mobile-nav-item ${accountActive?'active':''}" onclick="switchMobileView('accounts')"><i class="fas fa-wallet"></i><span>Cuentas</span></div><div class="nav-add-btn" onclick="toggleQuickMenu()" aria-label="Añadir movimiento"><i class="fas fa-plus" id="plus-icon"></i></div><div class="mobile-nav-item ${planActive?'active':''}" onclick="switchMobileView('plan')"><i class="fas fa-compass"></i><span>Plan</span></div><div class="mobile-nav-item ${activeView==='profile'||activeView==='settings'?'active':''}" onclick="switchMobileView('settings')"><i class="fas fa-user"></i><span>Perfil</span></div></nav>`;
   };
@@ -17794,7 +17794,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-  const CF_APP_VERSION='v2.5.68';
+  const CF_APP_VERSION='v2.5.69';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -18145,6 +18145,12 @@ function getPublicPrioColors(prio) {
     };
     if(!direct[view])return switchMobileViewV266(view);
     Promise.resolve(direct[view]()).finally(()=>window.scrollTo(0,0));
+  };
+  /* v2.5.69 — Presupuesto pasa a la barra; Perfil queda en su avatar superior. */
+  renderMobileNavigation=function(activeView='dashboard'){
+    const nav=document.getElementById('mobile-nav-container');if(!nav)return;
+    const planActive=['plan','monthly','receipts'].includes(activeView),accountActive=['accounts','inversiones'].includes(activeView);
+    nav.innerHTML=`<nav class="mobile-nav" aria-label="Navegación principal"><div class="mobile-nav-item ${activeView==='dashboard'?'active':''}" onclick="switchMobileView('dashboard')"><i class="fas fa-house"></i><span>Inicio</span></div><div class="mobile-nav-item ${accountActive?'active':''}" onclick="switchMobileView('accounts')"><i class="fas fa-wallet"></i><span>Cuentas</span></div><div class="nav-add-btn" onclick="toggleQuickMenu()" aria-label="Añadir movimiento"><i class="fas fa-plus" id="plus-icon"></i></div><div class="mobile-nav-item ${planActive?'active':''}" onclick="switchMobileView('plan')"><i class="fas fa-compass"></i><span>Plan</span></div><div class="mobile-nav-item ${activeView==='budgets'?'active':''}" onclick="switchMobileView('budgets')"><i class="fas fa-chart-pie"></i><span>Presupuesto</span></div></nav>`;
   };
   initializeApp();
   </script>
