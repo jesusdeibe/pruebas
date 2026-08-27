@@ -17794,7 +17794,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-  const CF_APP_VERSION='v2.5.62';
+  const CF_APP_VERSION='v2.5.63';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -17815,11 +17815,11 @@ function getPublicPrioColors(prio) {
   document.head.insertAdjacentHTML('beforeend', `<style>@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{overflow:hidden!important;background:#f4f5f2!important}.no-attachment-icon.cf263-merchant-slot .cf262-brand{border-radius:8px!important}.no-attachment-icon.cf263-merchant-slot .cf262-brand img{padding:3px!important}}</style>`);
   /* v2.5.42 — Marcas de comercios en el historial, con icono de categoría como respaldo. */
   const cf262Brands=[
-    [/mercadona/i,'Mercadona',{word:'MERCADONA',bg:'#058447',fg:'#fff'}],
+    [/mercadona/i,'Mercadona',{src:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mercadona.svg'}],
     [/carrefour/i,'Carrefour',{src:'https://cdn.simpleicons.org/carrefour/004E9A'}],
     [/lidl/i,'Lidl',{src:'https://cdn.simpleicons.org/lidl/0050AA'}],
-    [/\baldi\b/i,'ALDI',{word:'ALDI',bg:'#0050aa',fg:'#fff'}],
-    [/\bdia\b/i,'DIA',{word:'DIA',bg:'#e30613',fg:'#fff'}],
+    [/\baldi\b/i,'ALDI',null],
+    [/\bdia\b/i,'DIA',null],
     [/consum/i,'Consum',{word:'consum',bg:'#e4262d',fg:'#fff'}],
     [/eroski/i,'Eroski',{word:'eroski',bg:'#e30613',fg:'#fff'}],
     [/ikea/i,'IKEA',{src:'https://cdn.simpleicons.org/ikea/0058A3'}],
@@ -17831,21 +17831,21 @@ function getPublicPrioColors(prio) {
     [/hbo\s*(max)?|\bmax\b/i,'HBO Max',{src:'assets/logos/hbo.svg'}],
     [/disney\s*\+|disneyplus/i,'Disney+',{word:'Disney+',bg:'#123687',fg:'#fff'}],
     [/prime\s*video|amazon\s*prime/i,'Prime Video',{word:'prime',bg:'#08a8e8',fg:'#fff'}],
-    [/apple\s*(services|music|tv|com)?/i,'Apple',{word:'●',bg:'#1e1e1e',fg:'#fff'}],
+    [/apple\s*(services|music|tv|com)?/i,'Apple',{src:'https://cdn.simpleicons.org/apple/000000'}],
     [/spotify/i,'Spotify',{src:'https://cdn.simpleicons.org/spotify/1DB954'}],
     [/basic\s*-?\s*fit/i,'Basic-Fit',{src:'assets/logos/basic-fit.svg'}],
     [/fitness\s*park/i,'Fitness Park',{word:'FITNESS PARK',bg:'#101112',fg:'#fff'}],
     [/iberdrola/i,'Iberdrola',{word:'iberdrola',bg:'#4f9d30',fg:'#fff'}],
-    [/octopus\s*(energy)?/i,'Octopus Energy',{word:'octopus',bg:'#180048',fg:'#fff'}],
-    [/\bhoma\b/i,'Homa',{word:'HOMA',bg:'#ec5b4f',fg:'#fff'}],
-    [/dunkin/i,"Dunkin'",{word:'DUNKIN',bg:'#ff6c2f',fg:'#fff'}],
+    [/octopus\s*(energy)?/i,'Octopus Energy',{src:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Octopus_Energy_logo_(2019).svg'}],
+    [/\bhoma\b/i,'Homa',null],
+    [/dunkin/i,"Dunkin'",{src:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Dunkin%27_2022.svg'}],
     [/bomb[oó]n\s*boss/i,'Bombon Boss',{word:'BOMBON BOSS',bg:'#432c21',fg:'#fff'}],
-    [/wallapop/i,'Wallapop',{word:'wallapop',bg:'#13c1ac',fg:'#fff'}],
-    [/leroy\s*merlin/i,'Leroy Merlin',{word:'LEROY',bg:'#79be20',fg:'#fff'}],
+    [/wallapop/i,'Wallapop',{src:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Wallapop.svg'}],
+    [/leroy\s*merlin/i,'Leroy Merlin',{src:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Leroy_Merlin.svg'}],
     [/alcampo|auchan/i,'Alcampo',{src:'assets/logos/alcampo.svg'}],
-    [/\bhsn\b|hsnstore/i,'HSN',{word:'HSN',bg:'#263b82',fg:'#fff'}],
-    [/primark/i,'Primark',{word:'PRIMARK',bg:'#0075a9',fg:'#fff'}],
-    [/\bbmw\b|bmw\s*group/i,'BMW',{word:'BMW',bg:'#1769aa',fg:'#fff'}],
+    [/\bhsn\b|hsnstore/i,'HSN',null],
+    [/primark/i,'Primark',null],
+    [/\bbmw\b|bmw\s*group/i,'BMW',{src:'https://cdn.simpleicons.org/bmw/0066B1'}],
     [/banco\s*santander|\bsantander\b/i,'Santander',{word:'SANTANDER',bg:'#ec0000',fg:'#fff'}],
     [/revolut/i,'Revolut',{word:'R',bg:'#1b1b1b',fg:'#fff'}],
     [/\babanca\b/i,'ABANCA',{word:'ABANCA',bg:'#152a75',fg:'#fff'}],
@@ -17856,8 +17856,8 @@ function getPublicPrioColors(prio) {
     [/binance/i,'Binance',{word:'◆',bg:'#f3ba2f',fg:'#151515'}],
     [/tiger\s*(brokers?|trade)?/i,'Tiger Brokers',{word:'TIGER',bg:'#f57b20',fg:'#fff'}],
     [/media\s*markt|mediamarkt/i,'MediaMarkt',{src:'assets/logos/mediamarkt.svg'}],
-    [/repsol/i,'Repsol',{word:'REPSOL',bg:'#ff7a00',fg:'#fff'}],
-    [/cepsa|moeve/i,'Moeve',{word:'moeve',bg:'#8b4bd8',fg:'#fff'}],
+    [/repsol/i,'Repsol',{src:'https://www.repsol.com/content/dam/global/logotipos/repsol/logo-repsol.svg'}],
+    [/cepsa|moeve/i,'Moeve',{src:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Moeve_logo.svg'}],
     [/uber/i,'Uber',{src:'https://cdn.simpleicons.org/uber/000000'}],
     [/cabify/i,'Cabify',{word:'Cabify',bg:'#5b2d86',fg:'#fff'}],
     [/glovo/i,'Glovo',{src:'https://cdn.simpleicons.org/glovo/00a082'}],
@@ -17873,6 +17873,7 @@ function getPublicPrioColors(prio) {
     const match=cf262Brands.find(item=>item[0].test(String(description||'')));
     if(!match)return `<span class="cf262-fallback">${fallback}</span>`;
     const [,label,visual]=match;
+    if(!visual)return `<span class="cf262-fallback">${fallback}</span>`;
     if(visual.word)return `<span class="cf262-brand cf267-vector-brand" title="${cf257Escape(label)}">${cf267Wordmark(label,visual)}</span>`;
     return `<span class="cf262-brand cf267-vector-brand" title="${cf257Escape(label)}"><img src="${visual.src}" alt="${cf257Escape(label)}" onerror="this.parentElement.classList.add('cf262-failed');this.remove()"><span class="cf262-fallback">${fallback}</span></span>`;
   }
