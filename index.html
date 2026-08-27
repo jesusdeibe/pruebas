@@ -17794,7 +17794,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-  const CF_APP_VERSION='v2.5.61';
+  const CF_APP_VERSION='v2.5.62';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -17828,12 +17828,12 @@ function getPublicPrioColors(prio) {
     [/zara/i,'Zara',{src:'https://cdn.simpleicons.org/zara/000000'}],
     [/vinted/i,'Vinted',{src:'https://cdn.simpleicons.org/vinted/007782'}],
     [/netflix/i,'Netflix',{src:'https://cdn.simpleicons.org/netflix/E50914'}],
-    [/hbo\s*(max)?|\bmax\b/i,'HBO Max',{word:'HBO MAX',bg:'#4b2498',fg:'#fff'}],
+    [/hbo\s*(max)?|\bmax\b/i,'HBO Max',{src:'assets/logos/hbo.svg'}],
     [/disney\s*\+|disneyplus/i,'Disney+',{word:'Disney+',bg:'#123687',fg:'#fff'}],
     [/prime\s*video|amazon\s*prime/i,'Prime Video',{word:'prime',bg:'#08a8e8',fg:'#fff'}],
     [/apple\s*(services|music|tv|com)?/i,'Apple',{word:'●',bg:'#1e1e1e',fg:'#fff'}],
     [/spotify/i,'Spotify',{src:'https://cdn.simpleicons.org/spotify/1DB954'}],
-    [/basic\s*-?\s*fit/i,'Basic-Fit',{word:'BASIC-FIT',bg:'#f37021',fg:'#fff'}],
+    [/basic\s*-?\s*fit/i,'Basic-Fit',{src:'assets/logos/basic-fit.svg'}],
     [/fitness\s*park/i,'Fitness Park',{word:'FITNESS PARK',bg:'#101112',fg:'#fff'}],
     [/iberdrola/i,'Iberdrola',{word:'iberdrola',bg:'#4f9d30',fg:'#fff'}],
     [/octopus\s*(energy)?/i,'Octopus Energy',{word:'octopus',bg:'#180048',fg:'#fff'}],
@@ -17842,7 +17842,7 @@ function getPublicPrioColors(prio) {
     [/bomb[oó]n\s*boss/i,'Bombon Boss',{word:'BOMBON BOSS',bg:'#432c21',fg:'#fff'}],
     [/wallapop/i,'Wallapop',{word:'wallapop',bg:'#13c1ac',fg:'#fff'}],
     [/leroy\s*merlin/i,'Leroy Merlin',{word:'LEROY',bg:'#79be20',fg:'#fff'}],
-    [/alcampo|auchan/i,'Alcampo',{word:'ALCAMPO',bg:'#d91f2a',fg:'#fff'}],
+    [/alcampo|auchan/i,'Alcampo',{src:'assets/logos/alcampo.svg'}],
     [/\bhsn\b|hsnstore/i,'HSN',{word:'HSN',bg:'#263b82',fg:'#fff'}],
     [/primark/i,'Primark',{word:'PRIMARK',bg:'#0075a9',fg:'#fff'}],
     [/\bbmw\b|bmw\s*group/i,'BMW',{word:'BMW',bg:'#1769aa',fg:'#fff'}],
@@ -17850,12 +17850,12 @@ function getPublicPrioColors(prio) {
     [/revolut/i,'Revolut',{word:'R',bg:'#1b1b1b',fg:'#fff'}],
     [/\babanca\b/i,'ABANCA',{word:'ABANCA',bg:'#152a75',fg:'#fff'}],
     [/\bbbva\b/i,'BBVA',{word:'BBVA',bg:'#004481',fg:'#fff'}],
-    [/banco\s*sabadell|\bsabadell\b/i,'Banco Sabadell',{word:'SABADELL',bg:'#004b8d',fg:'#fff'}],
+    [/banco\s*sabadell|\bsabadell\b/i,'Banco Sabadell',{src:'assets/logos/banco-sabadell.svg'}],
     [/trade\s*republic/i,'Trade Republic',{word:'TR',bg:'#142c21',fg:'#fff'}],
     [/bitvavo/i,'Bitvavo',{word:'bitvavo',bg:'#2f4bd9',fg:'#fff'}],
     [/binance/i,'Binance',{word:'◆',bg:'#f3ba2f',fg:'#151515'}],
     [/tiger\s*(brokers?|trade)?/i,'Tiger Brokers',{word:'TIGER',bg:'#f57b20',fg:'#fff'}],
-    [/media\s*markt|mediamarkt/i,'MediaMarkt',{word:'MEDIA MARKT',bg:'#df0000',fg:'#fff'}],
+    [/media\s*markt|mediamarkt/i,'MediaMarkt',{src:'assets/logos/mediamarkt.svg'}],
     [/repsol/i,'Repsol',{word:'REPSOL',bg:'#ff7a00',fg:'#fff'}],
     [/cepsa|moeve/i,'Moeve',{word:'moeve',bg:'#8b4bd8',fg:'#fff'}],
     [/uber/i,'Uber',{src:'https://cdn.simpleicons.org/uber/000000'}],
