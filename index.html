@@ -17834,7 +17834,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.5.91';
+const CF_APP_VERSION='v2.5.93';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -18548,6 +18548,132 @@ const CF_APP_VERSION='v2.5.91';
     const data=await getData(),shared=cf288SharedNames(data),monthTransfers=(data.transfers||[]).filter(item=>{const period=cf291Period(item);return period.month===month&&period.year===year&&shared.has(item.to);}),{data:allAccounts,error}=await supabaseClient.from('accounts').select('name,user_id');if(error)throw error;const owners=new Map((allAccounts||[]).map(account=>[account.name,account.user_id]));let my=0,partner=0,external=0;
     monthTransfers.forEach(item=>{const amount=Math.abs(Number(item.amount)||0),concept=item.concept||'',owner=owners.get(item.from);if(/\[EXTERNA\]/i.test(concept)){external+=amount;return;}if(/\[PAREJA\]/i.test(concept)){if(cf288IsSilvia())my+=amount;else partner+=amount;return;}if(/^silvia$/i.test(String(item.from||''))){partner+=amount;return;}if(/^jesús?$/i.test(String(item.from||''))){my+=amount;return;}if(owner===currentUser.id){if(cf288IsSilvia())partner+=amount;else my+=amount;return;}if(owner){if(cf288IsSilvia())my+=amount;else partner+=amount;return;}external+=amount;});
     const {error:upsertError}=await supabaseClient.from('contributions').upsert({month_key:`${month}-${year}`,my,partner,external},{onConflict:'month_key'});if(upsertError)throw upsertError;
+  };
+  /* v2.5.92 — los ingresos pueden pertenecer al mes financiero siguiente sin alterar su fecha real ni el saldo de la cuenta. */
+  function cf292CleanIncomeDescription(value){return String(value||'').replace(/\[PERIODO:\d{1,2}-\d{4}\]\s*/ig,'').trim();}
+  function cf292IncomePeriod(transaction){
+    const found=/\[PERIODO:(\d{1,2})-(\d{4})\]/i.exec(String(transaction?.description||''));
+    if(found)return {month:Number(found[1]),year:Number(found[2])};
+    const date=new Date(transaction?.date||Date.now());return {month:date.getMonth(),year:date.getFullYear()};
+  }
+  function cf292SuggestedIncomePeriod(dateValue,category){
+    const date=new Date(`${dateValue||new Date().toISOString().slice(0,10)}T12:00:00`);
+    if(String(category||'').toLowerCase()==='salario'&&date.getDate()>=25)date.setMonth(date.getMonth()+1);
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+  }
+  function cf292InstallIncomePeriod(type){
+    const old=document.getElementById('cf292-income-period-group');
+    if(type!=='ingresos'){old?.remove();return;}
+    const date=document.getElementById('txn-date'),category=document.getElementById('txn-category');
+    if(!date||!category)return;
+    let group=old,field=document.getElementById('cf292-income-period');
+    if(!group){
+      group=document.createElement('div');group.id='cf292-income-period-group';group.className='form-group cf292-income-period-group';
+      group.innerHTML='<label for="cf292-income-period">¿Para qué mes es este ingreso?</label><input id="cf292-income-period" class="form-input" type="month" required><small>La cuenta se actualiza en la fecha real; este mes organiza tus ingresos, ahorro y presupuesto.</small>';
+      (date.closest('.form-group')||date.parentElement)?.insertAdjacentElement('afterend',group);field=group.querySelector('input');
+    }
+    const suggest=()=>{if(field.dataset.manual==='true')return;field.value=cf292SuggestedIncomePeriod(date.value,category.value);};
+    field.dataset.manual='false';field.value=cf292SuggestedIncomePeriod(date.value,category.value);
+    field.onchange=()=>{field.dataset.manual='true';};
+    date.onchange=(()=>{const prior=date.onchange;return event=>{prior?.call(date,event);suggest();};})();
+    category.onchange=(()=>{const prior=category.onchange;return event=>{prior?.call(category,event);suggest();};})();
+  }
+  const openTransactionModalV292=openTransactionModal;
+  openTransactionModal=async function(type){await openTransactionModalV292(type);cf292InstallIncomePeriod(type);};
+  const handleEditTransactionV292=handleEditTransaction;
+  handleEditTransaction=async function(id){
+    await handleEditTransactionV292(id);const data=await getData(),transaction=(data.transactions||[]).find(item=>String(item.id)===String(id));
+    if(transaction?.type!=='ingresos')return;
+    cf292InstallIncomePeriod('ingresos');const field=document.getElementById('cf292-income-period'),period=cf292IncomePeriod(transaction),description=document.getElementById('txn-description');
+    if(field){field.value=`${period.year}-${String(period.month+1).padStart(2,'0')}`;field.dataset.manual='true';}
+    if(description)description.value=cf292CleanIncomeDescription(description.value);
+  };
+  const saveTransactionClickV292=saveTransactionClick;
+  saveTransactionClick=async function(){
+    const description=document.getElementById('txn-description'),field=document.getElementById('cf292-income-period');let original;
+    if(currentType==='ingresos'&&description&&field?.value){original=description.value;description.value=`${cf291PeriodTag(field.value)} ${cf292CleanIncomeDescription(original)}`.trim();}
+    try{return await saveTransactionClickV292();}finally{if(original!==undefined&&description)description.value=original;}
+  };
+  const cf277MonthTransactionsV292=cf277MonthTransactions;
+  cf277MonthTransactions=function(data,scope,month=currentMonth,year=currentYear){
+    const transactions=(data.transactions||[]).filter(item=>{
+      const shared=String(item.type||'').includes('compartid');
+      if(scope==='shared'){const date=new Date(item.date);return shared&&date.getMonth()===month&&date.getFullYear()===year;}
+      if(shared)return false;
+      if(item.type==='ingresos'){const period=cf292IncomePeriod(item);return period.month===month&&period.year===year;}
+      const date=new Date(item.date);return date.getMonth()===month&&date.getFullYear()===year;
+    });
+    return scope==='personal'?[...transactions,...cf288ContributionItems(data,month,year)]:transactions;
+  };
+  const getTransactionsByMonthV292=getTransactionsByMonth;
+  getTransactionsByMonth=async function(month,type=null){
+    const items=await getTransactionsByMonthV292(month,type);
+    if(type!=='ingresos')return items;
+    return (await getData()).transactions.filter(item=>{
+      if(item.type!=='ingresos')return false;const period=cf292IncomePeriod(item);return period.month===month&&item.user_id===currentUser.id;
+    });
+  };
+  const cf277EscapeV292=cf277Escape;
+  cf277Escape=function(value){return cf277EscapeV292(cf292CleanIncomeDescription(value));};
+  document.head.insertAdjacentHTML('beforeend',`<style>@media(max-width:768px){.cf292-income-period-group{margin-top:10px;padding:13px 14px;border:1px solid #e4ebe0;border-radius:17px;background:#fbfdf9}.cf292-income-period-group label{font-size:11px;font-weight:900;color:#52604f}.cf292-income-period-group .form-input{margin-top:7px}.cf292-income-period-group small{display:block;margin-top:6px;color:#8a9489;font-size:9px;font-weight:650;line-height:1.35}}</style>`);
+  /* v2.5.93 — actividad coherente: ingresos y aportaciones se ven donde realmente afectan. */
+  function cf293ContributionLabel(transfer){
+    const concept=String(transfer?.concept||''),from=String(transfer?.from||'');
+    if(/\[EXTERNA\]/i.test(concept))return 'Aportación externa';
+    if(/\[PAREJA\]/i.test(concept))return cf288IsSilvia()?'Jesús':'Silvia';
+    if(/^silvia$/i.test(from))return 'Silvia';
+    if(/^jesús?$/i.test(from))return 'Jesús';
+    return cf291PersonName();
+  }
+  function cf293ContributionItems(data,accountName=''){
+    const shared=cf288SharedNames(data);
+    return (data.transfers||[]).filter(item=>shared.has(item.to)&&(!accountName||item.from===accountName||item.to===accountName)).map(item=>({
+      id:`contribution-${item.id||`${item.date}-${item.amount}`}`,type:'aportacion',isContribution:true,date:item.date,amount:Math.abs(Number(item.amount)||0),
+      description:`Aportación de ${cf293ContributionLabel(item)}`,category:'Aportación',account:item.from,destination:item.to,contributor:cf293ContributionLabel(item),notes:item.concept||''
+    }));
+  }
+  cf249RenderActivity=function(){
+    const home=document.querySelector('.cf2-home'),section=[...home?.querySelectorAll('.cf2-section')||[]].find(item=>item.querySelector('.cf2-section-head h2')?.textContent.trim()==='Últimos movimientos');if(!section||!cf249HeroData)return;
+    const data=cf249HeroData.data,items=[...(data.transactions||[]),...cf293ContributionItems(data)].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,7),groups=[];
+    items.forEach(item=>{const key=new Date(item.date).toDateString(),last=groups[groups.length-1];if(!last||last.key!==key)groups.push({key,label:cf249LabelForDate(item.date),items:[item]});else last.items.push(item);});
+    const html=groups.length?groups.map(group=>`<div class="cf249-date-group"><div class="cf249-date-label">${group.label}</div>${group.items.map(item=>{const contribution=item.isContribution||item.type==='aportacion',income=isIncomeTxn(item),investment=isInvestmentTxn(item),fallback=income?'💰':investment?'📈':'🛒',icon=contribution?'<i class="fas fa-people-arrows"></i>':cf262TransactionIcon(item,fallback),label=contribution?item.description:item.description||item.category||'Movimiento',sub=contribution?`${item.contributor||'Aportación'} · A ${item.destination||'cuenta compartida'}`:`${item.category||'Sin categoría'}${item.account?' · '+item.account:''}`,color=contribution?'#8a6fa9':income?'#5c9368':'var(--text-primary)';return `<div class="cf2-movement"><div class="cf2-movement-left"><div class="cf2-movement-icon" style="${contribution?'background:#f3effb;color:#8a6fa9':''}">${icon}</div><div><div class="cf2-movement-title">${cf277Escape(label)}</div><div class="cf2-movement-sub">${cf277Escape(sub)}</div></div></div><div class="cf2-movement-amount" style="color:${color}">${contribution?'↗':income?'+':'−'}${formatCurrency(Math.abs(Number(item.amount)||0))}</div></div>`;}).join('')}</div>`).join(''):'<div class="cf249-empty">Todavía no hay movimientos.</div>';
+    const card=section.querySelector('.cf2-card');if(card)card.innerHTML=html;
+  };
+  function cf293AccountItems(data,accountName){
+    const transactions=(data.transactions||[]).filter(item=>item.account===accountName);
+    return [...transactions,...cf293ContributionItems(data,accountName)].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+  }
+  const cf264TransactionRowV293=cf264TransactionRow;
+  cf264TransactionRow=function(item){
+    if(!(item?.isContribution||item?.type==='aportacion'))return cf264TransactionRowV293(item);
+    const title=item.description||`Aportación de ${item.contributor||'usuario'}`,sub=`${item.contributor||'Aportación'} · A ${item.destination||'cuenta compartida'}`;
+    return `<button class="cf264-movement cf288-contribution-row" type="button"><span class="cf264-movement-icon" style="background:#f3effb;color:#8a6fa9"><i class="fas fa-people-arrows"></i></span><span class="cf264-movement-copy"><b>${cf277Escape(title)}</b><small>${cf277Escape(sub)}</small></span><strong style="color:#8a6fa9">↗${formatCurrency(Math.abs(Number(item.amount)||0))}</strong></button>`;
+  };
+  const renderMobileAccountsV293=renderMobileAccounts;
+  renderMobileAccounts=async function(){
+    const output=await renderMobileAccountsV293();if(window.innerWidth>768)return output;
+    const data=await getData(),slides=[...document.querySelectorAll('.cf264-account-slide')];if(!slides.length)return output;
+    window.cf264MovementsByAccount=Object.fromEntries(slides.map(slide=>[slide.dataset.account,cf293AccountItems(data,slide.dataset.account)]));
+    cf264ShowAccountMovements(window.cf264ActiveAccountName||slides[0].dataset.account||'');return output;
+  };
+  let cf293ReceiptOrigin='dashboard',cf293HousingOrigin='accounts';
+  const switchMobileViewV293=switchMobileView;
+  switchMobileView=function(view){
+    if(view==='receipts'&&currentView&&currentView!=='receipts')cf293ReceiptOrigin=currentView;
+    return switchMobileViewV293(view);
+  };
+  function cf293OriginLabel(view){return ({dashboard:'Inicio',accounts:'Cuentas',monthly:'El mes',budgets:'Presupuestos',settings:'Perfil'})[view]||'Anterior';}
+  function cf293InstallContextReturn(selector,origin){
+    const root=document.querySelector(selector);if(!root)return;let button=root.querySelector('.cf229-return');
+    if(!button){root.insertAdjacentHTML('afterbegin','<button class="cf229-return"></button>');button=root.querySelector('.cf229-return');}
+    button.setAttribute('onclick',`switchMobileView('${origin}')`);button.innerHTML=`<i class="fas fa-arrow-left"></i> Volver a ${cf293OriginLabel(origin)}`;
+  }
+  const renderMobileReceiptsV293=renderMobileReceipts;
+  renderMobileReceipts=async function(){const output=await renderMobileReceiptsV293();cf293InstallContextReturn('.cf225',cf293ReceiptOrigin);return output;};
+  const renderMobileHousingGoalV293=renderMobileHousingGoal;
+  renderMobileHousingGoal=async function(){
+    if(currentView&&currentView!=='housing')cf293HousingOrigin=currentView;
+    const output=await renderMobileHousingGoalV293();cf293InstallContextReturn('.h221,.h220,.house-page',cf293HousingOrigin);return output;
   };
   initializeApp();
   </script>
