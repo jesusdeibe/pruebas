@@ -17834,7 +17834,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.5.96';
+const CF_APP_VERSION='v2.5.97';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -18805,6 +18805,39 @@ const CF_APP_VERSION='v2.5.96';
     const originalType=currentType;currentType='gastos_compartidos';cf296SetSharedDirectForm(suggestion);
     try{return await saveTransactionClickV296();}finally{currentType=originalType;}
   };
+  /* v2.5.97 — aportaciones comprensibles y mes financiero visible. */
+  function cf297FinancialMonthLabel(transaction){
+    if(transaction?.type!=='ingresos')return '';
+    const actual=new Date(transaction.date),period=cf292IncomePeriod(transaction);
+    if(actual.getMonth()===period.month&&actual.getFullYear()===period.year)return '';
+    const label=new Date(period.year,period.month,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+    return `Corresponde a ${label.charAt(0).toUpperCase()+label.slice(1)}`;
+  }
+  const cf288RowV297=cf288Row;
+  cf288Row=function(item,variant='month'){
+    const output=cf288RowV297(item,variant),period=cf297FinancialMonthLabel(item);
+    return period?output.replace('</small>',` · ${cf277Escape(period)}</small>`):output;
+  };
+  const cf264TransactionRowV297=cf264TransactionRow;
+  cf264TransactionRow=function(item){
+    const output=cf264TransactionRowV297(item),period=cf297FinancialMonthLabel(item);
+    return period?output.replace('</small>',` · ${cf277Escape(period)}</small>`):output;
+  };
+  const cf249RenderActivityV297=cf249RenderActivity;
+  cf249RenderActivity=function(){
+    cf249RenderActivityV297();const data=cf249HeroData?.data;if(!data)return;
+    const incomes=(data.transactions||[]).filter(isIncomeTxn);
+    document.querySelectorAll('.cf249-activity .cf2-movement').forEach(row=>{const title=String(row.querySelector('.cf2-movement-title')?.textContent||'').trim(),match=incomes.find(item=>cf295CleanDescription(item.description||item.category||'Movimiento')===title),period=cf297FinancialMonthLabel(match);if(period){const sub=row.querySelector('.cf2-movement-sub');if(sub&&!sub.textContent.includes('Corresponde a'))sub.textContent=`${sub.textContent} · ${period}`;}});
+  };
+  const cf283OpenContributionCenterV297=cf283OpenContributionCenter;
+  cf283OpenContributionCenter=async function(){
+    await cf283OpenContributionCenterV297();const data=await getData(),now=new Date(),monthKey=`${now.getMonth()}-${now.getFullYear()}`,base=(data.contributions||[]).find(item=>item.month===monthKey)||{},direct=cf295DirectItems(data,now.getMonth(),now.getFullYear()),directJesus=direct.filter(item=>item.contributor==='Jesús').reduce((sum,item)=>sum+item.amount,0),directSilvia=direct.filter(item=>item.contributor==='Silvia').reduce((sum,item)=>sum+item.amount,0),transferredJesus=Number(base.my||0),transferredSilvia=Number(base.partner||0),external=Number(base.external||0),transferred=transferredJesus+transferredSilvia+external,directTotal=directJesus+directSilvia,total=transferred+directTotal;
+    document.querySelectorAll('.cf295-direct-summary,.cf297-breakdown,.cf295-direct-note').forEach(node=>node.remove());
+    const hero=document.querySelector('.cf283-hero'),heroLabel=hero?.querySelector('.cf283-hero-side span'),heroValue=hero?.querySelector('.cf283-hero-side b');if(heroLabel)heroLabel.textContent='Aportado al hogar';if(heroValue)heroValue.textContent=formatCurrency(total);
+    const people=[...document.querySelectorAll('.cf283-person')];[transferredJesus+directJesus,transferredSilvia+directSilvia].forEach((amount,index)=>{const value=people[index]?.querySelector('.cf283-person-values span:first-child b');if(value)value.textContent=formatCurrency(amount);});
+    hero?.insertAdjacentHTML('afterend',`<section class="cf297-breakdown"><div class="cf297-breakdown-head"><span><i class="fas fa-circle-check"></i> Aportación total al hogar</span><b>${formatCurrency(total)}</b></div><div class="cf297-breakdown-rows"><span>Transferido a cuentas comunes<b>${formatCurrency(transferred)}</b></span><span>Pagado directamente<b>${formatCurrency(directTotal)}</b></span></div><div class="cf297-people"><span>Jesús<b>${formatCurrency(transferredJesus+directJesus)}</b><small>${directJesus?`${formatCurrency(directJesus)} directo`:''}</small></span><span>Silvia<b>${formatCurrency(transferredSilvia+directSilvia)}</b><small>${directSilvia?`${formatCurrency(directSilvia)} directo`:''}</small></span></div></section>`);
+  };
+  document.head.insertAdjacentHTML('beforeend',`<style>@media(max-width:768px){.cf297-breakdown{margin-top:13px;padding:14px;border:1px solid #e2e8df;border-radius:19px;background:#fff;box-shadow:0 5px 13px rgba(37,50,41,.025)}.cf297-breakdown-head{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#263229;font-size:11px;font-weight:900}.cf297-breakdown-head i{margin-right:5px;color:#7c9e7b}.cf297-breakdown-head b{font-size:14px;font-weight:950}.cf297-breakdown-rows{display:grid;gap:7px;margin-top:11px;padding-top:11px;border-top:1px solid #edf0eb}.cf297-breakdown-rows span{display:flex;justify-content:space-between;gap:10px;color:#7c877d;font-size:10px;font-weight:750}.cf297-breakdown-rows b{color:#39453b;font-size:11px;font-weight:900}.cf297-people{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}.cf297-people span{padding:9px 10px;border-radius:13px;background:#f6f8f4;color:#7a8579;font-size:9px;font-weight:800}.cf297-people b,.cf297-people small{display:block}.cf297-people b{margin-top:3px;color:#263127;font-size:12px;font-weight:950}.cf297-people small{min-height:10px;margin-top:2px;color:#8b769d;font-size:8px;font-weight:750}}</style>`);
   initializeApp();
   </script>
 </body>
