@@ -17834,7 +17834,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.5.94';
+const CF_APP_VERSION='v2.5.95';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -18694,6 +18694,89 @@ const CF_APP_VERSION='v2.5.94';
   renderMobileDashboard=async function(){await cf294LoadAccountOwners();return renderMobileDashboardV294();};
   const renderMobileAccountsV294=renderMobileAccounts;
   renderMobileAccounts=async function(){await cf294LoadAccountOwners();return renderMobileAccountsV294();};
+  /* v2.5.95 — gasto común pagado desde una cuenta personal: una aportación directa, sin duplicar movimientos. */
+  function cf295IsDirectContribution(item){return item?.isDirectContribution===true||/\[APORTACION_DIRECTA\]/i.test(String(item?.description||''));}
+  function cf295CleanDescription(value){return cf292CleanIncomeDescription(value).replace(/\[APORTACION_DIRECTA\]\s*/ig,'').trim();}
+  function cf295IsSharedAccount(account){return cf283SharedAccount(account);}
+  function cf295ContributorName(item){
+    const owner=cf294AccountOwners.get(String(item?.account||''));
+    if(owner)return owner===currentUser?.id?cf291PersonName():cf291PartnerName();
+    if(item?.user_id)return item.user_id===currentUser?.id?cf291PersonName():cf291PartnerName();
+    return cf291PersonName();
+  }
+  function cf295DirectItems(data,month,year,personalOnly=false){
+    const personal=cf288MyAccountNames(data);
+    return (data.transactions||[]).filter(item=>item.type==='gastos_compartidos'&&cf295IsDirectContribution(item)&&cf288MonthMatches(item.date,month,year)&&(!personalOnly||personal.has(item.account))).map(item=>({
+      ...item,type:'aportacion',isContribution:true,isDirectContribution:true,amount:Math.abs(Number(item.amount)||0),
+      description:`Pago directo común · ${item.category||'Gasto compartido'}`,category:'Aportación directa',destination:'Gastos compartidos',contributor:cf295ContributorName(item),originalCategory:item.category
+    }));
+  }
+  function cf295InstallDirectContribution(type){
+    document.getElementById('cf295-direct-group')?.remove();
+    if(type!=='gastos_compartidos')return;
+    const select=document.getElementById('txn-account');if(!select)return;
+    const group=document.createElement('div');group.id='cf295-direct-group';group.className='form-group cf295-direct-group';
+    group.innerHTML='<label class="cf295-direct-toggle"><input id="cf295-direct-toggle" type="checkbox" checked><span><b>Contarlo como aportación al hogar</b><small>El gasto sigue siendo compartido; solo registra que se pagó directamente desde tu cuenta.</small></span></label>';
+    (select.closest('.form-group')||select.parentElement)?.insertAdjacentElement('afterend',group);
+    const sync=()=>{const dataAccount=(window.cf295Accounts||[]).find(account=>account.name===select.value),personal=dataAccount?!cf295IsSharedAccount(dataAccount):true;group.style.display=personal?'block':'none';};
+    select.addEventListener('change',sync);sync();
+  }
+  const openTransactionModalV295=openTransactionModal;
+  openTransactionModal=async function(type){await openTransactionModalV295(type);const data=await getData();window.cf295Accounts=data.accounts||[];cf295InstallDirectContribution(type);};
+  const handleEditTransactionV295=handleEditTransaction;
+  handleEditTransaction=async function(id){
+    await handleEditTransactionV295(id);const data=await getData(),transaction=(data.transactions||[]).find(item=>String(item.id)===String(id));
+    if(transaction?.type!=='gastos_compartidos')return;window.cf295Accounts=data.accounts||[];cf295InstallDirectContribution('gastos_compartidos');
+    const toggle=document.getElementById('cf295-direct-toggle'),description=document.getElementById('txn-description');if(toggle)toggle.checked=cf295IsDirectContribution(transaction);if(description)description.value=cf295CleanDescription(description.value);
+  };
+  const saveTransactionClickV295=saveTransactionClick;
+  saveTransactionClick=async function(){
+    const description=document.getElementById('txn-description'),toggle=document.getElementById('cf295-direct-toggle'),accountName=document.getElementById('txn-account')?.value,account=(window.cf295Accounts||[]).find(item=>item.name===accountName),isPersonal=account?!cf295IsSharedAccount(account):false;let original;
+    if(currentType==='gastos_compartidos'&&description){original=description.value;description.value=`${toggle?.checked&&isPersonal?'[APORTACION_DIRECTA] ':''}${cf295CleanDescription(original)}`.trim();}
+    try{return await saveTransactionClickV295();}finally{if(original!==undefined&&description)description.value=original;}
+  };
+  const cf277MonthTransactionsV295=cf277MonthTransactions;
+  cf277MonthTransactions=function(data,scope,month=currentMonth,year=currentYear){
+    const items=cf277MonthTransactionsV295(data,scope,month,year);
+    return scope==='personal'?[...items,...cf295DirectItems(data,month,year,true)]:items;
+  };
+  const cf264TransactionRowV295=cf264TransactionRow;
+  cf264TransactionRow=function(item){
+    if(!cf295IsDirectContribution(item))return cf264TransactionRowV295(item);
+    const contributor=item.contributor||cf295ContributorName(item),title=item.isDirectContribution&&item.type==='aportacion'?item.description:`Pago directo común · ${item.category||'Gasto compartido'}`;
+    return `<button class="cf264-movement cf288-contribution-row" type="button"><span class="cf264-movement-icon" style="background:#f3effb;color:#8a6fa9"><i class="fas fa-house-circle-check"></i></span><span class="cf264-movement-copy"><b>${cf277Escape(title)}</b><small>${cf277Escape(contributor)} · Cuenta personal</small></span><strong style="color:#8a6fa9">↗${formatCurrency(Math.abs(Number(item.amount)||0))}</strong></button>`;
+  };
+  const cf293AccountItemsV295=cf293AccountItems;
+  cf293AccountItems=function(data,accountName){
+    const items=cf293AccountItemsV295(data,accountName);
+    return items.map(item=>item.account===accountName&&cf295IsDirectContribution(item)?{...item,type:'aportacion',isContribution:true,isDirectContribution:true,contributor:cf295ContributorName(item),description:`Pago directo común · ${item.category||'Gasto compartido'}`} : item).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+  };
+  const cf249RenderActivityV295=cf249RenderActivity;
+  cf249RenderActivity=function(){
+    cf249RenderActivityV295();document.querySelectorAll('.cf2-movement').forEach(()=>{});
+    const home=document.querySelector('.cf2-home'),card=home?.querySelector('.cf249-activity .cf2-card');if(!card||!cf249HeroData)return;
+    const data=cf249HeroData.data,items=[...(data.transactions||[]),...cf293ContributionItems(data)].map(item=>cf295IsDirectContribution(item)?{...item,type:'aportacion',isContribution:true,isDirectContribution:true,contributor:cf295ContributorName(item),description:`Pago directo común · ${item.category||'Gasto compartido'}`,destination:'Gastos compartidos'}:item).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,7),groups=[];
+    items.forEach(item=>{const key=new Date(item.date).toDateString(),last=groups[groups.length-1];if(!last||last.key!==key)groups.push({key,label:cf249LabelForDate(item.date),items:[item]});else last.items.push(item);});
+    card.innerHTML=groups.length?groups.map(group=>`<div class="cf249-date-group"><div class="cf249-date-label">${group.label}</div>${group.items.map(item=>{const contribution=item.isContribution||item.type==='aportacion',income=isIncomeTxn(item),fallback=income?'💰':'🛒',icon=contribution?'<i class="fas fa-house-circle-check"></i>':cf262TransactionIcon(item,fallback),label=item.description||item.category||'Movimiento',sub=contribution?`${item.contributor||'Aportación'} · ${item.destination||'Gastos compartidos'}`:`${item.category||'Sin categoría'}${item.account?' · '+item.account:''}`,color=contribution?'#8a6fa9':income?'#5c9368':'var(--text-primary)';return `<div class="cf2-movement"><div class="cf2-movement-left"><div class="cf2-movement-icon" style="${contribution?'background:#f3effb;color:#8a6fa9':''}">${icon}</div><div><div class="cf2-movement-title">${cf277Escape(label)}</div><div class="cf2-movement-sub">${cf277Escape(sub)}</div></div></div><div class="cf2-movement-amount" style="color:${color}">${contribution?'↗':income?'+':'−'}${formatCurrency(Math.abs(Number(item.amount)||0))}</div></div>`;}).join('')}</div>`).join(''):'<div class="cf249-empty">Todavía no hay movimientos.</div>';
+  };
+  const cf283OpenContributionCenterV295=cf283OpenContributionCenter;
+  cf283OpenContributionCenter=async function(){
+    await cf294LoadAccountOwners();await cf283OpenContributionCenterV295();const data=await getData(),now=new Date(),direct=cf295DirectItems(data,now.getMonth(),now.getFullYear()),total=direct.reduce((sum,item)=>sum+item.amount,0);if(!total)return;
+    const jesus=direct.filter(item=>item.contributor==='Jesús').reduce((sum,item)=>sum+item.amount,0),silvia=direct.filter(item=>item.contributor==='Silvia').reduce((sum,item)=>sum+item.amount,0),hero=document.querySelector('.cf283-hero-side b');if(hero){const current=Number(String(hero.textContent).replace(/[^0-9,.-]/g,'').replace(',','.'))||0;hero.textContent=formatCurrency(current+total);}
+    const people=[...document.querySelectorAll('.cf283-person')];[[jesus,'Jesús'],[silvia,'Silvia']].forEach(([amount,name],index)=>{if(!amount||!people[index])return;people[index].insertAdjacentHTML('beforeend',`<small class="cf295-direct-note">Incluye ${formatCurrency(amount)} pagados directamente</small>`);});
+    document.querySelector('.cf283-hero')?.insertAdjacentHTML('afterend',`<div class="cf295-direct-summary"><i class="fas fa-house-circle-check"></i><span><b>${formatCurrency(total)} pagados directamente</b><small>Ya cuentan como aportación al hogar.</small></span></div>`);
+  };
+  document.head.insertAdjacentHTML('beforeend',`<style>@media(max-width:768px){.cf295-direct-group{margin-top:-9px;margin-bottom:18px;padding:13px 14px;border:1px solid #e4def0;border-radius:16px;background:#fbfaff}.cf295-direct-toggle{display:flex!important;align-items:flex-start;gap:10px;cursor:pointer}.cf295-direct-toggle input{width:17px;height:17px;margin:2px 0 0;accent-color:#8265a3}.cf295-direct-toggle b,.cf295-direct-toggle small{display:block}.cf295-direct-toggle b{color:#554365;font-size:11px;font-weight:900}.cf295-direct-toggle small{margin-top:3px;color:#83798d;font-size:9px;font-weight:700;line-height:1.35}.cf295-direct-summary{display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px 13px;border:1px solid #e5def0;border-radius:17px;background:#fbfaff;color:#61506e}.cf295-direct-summary i{width:31px;height:31px;display:grid;place-items:center;border-radius:10px;background:#f0eaf8;color:#8265a3}.cf295-direct-summary b,.cf295-direct-summary small{display:block}.cf295-direct-summary b{font-size:11px;font-weight:900}.cf295-direct-summary small{margin-top:3px;color:#897d91;font-size:9px;font-weight:700}.cf295-direct-note{display:block;margin-top:8px;color:#826d97;font-size:8px;font-weight:800}}</style>`);
+  const renderMobileMonthlyV295=renderMobileMonthly;
+  renderMobileMonthly=async function(){
+    await cf294LoadAccountOwners();const output=await renderMobileMonthlyV295();
+    if(window.innerWidth>768||cf277MonthScope!=='shared')return output;
+    const data=await getData(),row=(data.contributions||[]).find(item=>item.month===`${currentMonth}-${currentYear}`)||{},transfers=Number(row.my||0)+Number(row.partner||0)+Number(row.external||0),direct=cf295DirectItems(data,currentMonth,currentYear).reduce((sum,item)=>sum+item.amount,0),expenses=(data.transactions||[]).filter(item=>item.type==='gastos_compartidos'&&cf288MonthMatches(item.date,currentMonth,currentYear)).reduce((sum,item)=>sum+Math.abs(Number(item.amount)||0),0),income=transfers+direct,saving=income-expenses;
+    const metric=document.querySelector('.cf276-metrics .cf276-metric:first-child strong');if(metric)metric.textContent=formatCurrency(income);
+    const amount=document.querySelector('.cf276-hero .cf276-amount');if(amount)amount.textContent=formatCurrency(saving);
+    const note=document.querySelector('.cf276-hero-note');if(note&&direct)note.textContent=`Aportaciones y ${formatCurrency(direct)} pagados directamente, menos gastos comunes`;
+    return output;
+  };
   initializeApp();
   </script>
 </body>
