@@ -17834,7 +17834,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.6.5';
+const CF_APP_VERSION='v2.6.7';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -19066,6 +19066,98 @@ const CF_APP_VERSION='v2.6.5';
   document.head.insertAdjacentHTML('beforeend',`<style>
     .cf305-transaction-scope{margin-bottom:20px}.cf305-scope-options,.cf305-wallet-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}.cf305-scope-options button,.cf305-wallet-options button{min-height:47px;border:1px solid #dce4da;border-radius:14px;background:#f7f9f6;color:#556158;font:800 13px inherit;cursor:pointer}.cf305-scope-options button i,.cf305-wallet-options button i{margin-right:5px}.cf305-scope-options button.active,.cf305-wallet-options button.active{background:#edf7ed;border-color:#66bd73;color:#27743b;box-shadow:0 4px 12px rgba(69,143,81,.12)}.cf305-scope-note,.cf305-category-hint,.cf305-wallet-note{display:block;margin:8px 2px 0;color:#758078;font-size:11px;font-weight:650;line-height:1.35}.cf305-wallet-intent>select{display:none}.cf305-wallet-intent{grid-column:1/-1}.cf305-wallet-options button{min-height:39px;border-radius:11px;font-size:11px}.cf305-wallet-note{margin:11px 1px 0;padding:9px 10px;border-radius:10px;background:#f3f6f1;color:#687669}@media(max-width:768px){.cf305-transaction-scope{margin-bottom:23px!important;padding:14px!important;border:1px solid #e5e9e3!important;border-radius:18px!important;background:#fff!important}.cf305-transaction-scope .form-label{margin-bottom:10px!important}.cf305-scope-options button{min-height:50px;border-radius:15px}.cf305-category-hint{margin-top:8px!important}.cf305-wallet-options button{min-height:42px;font-size:11px}.cf305-wallet-intent{gap:7px!important}}
   </style>`);
+  /* v2.6.6 — Aportaciones transparentes y categorías creadas con contexto. */
+  async function cf306UpdateContributionPreview(){
+    const preview=document.getElementById('cf306-contribution-preview');if(!preview)return;
+    const origin=document.getElementById('contribution-origin')?.value,source=document.getElementById('contribution-source')?.value,destination=document.getElementById('contribution-destination')?.value,amount=Math.abs(Number(document.getElementById('contribution-amount')?.value)||0);
+    const originLabel=origin==='partner'?`Mi pareja (${typeof cf291PartnerName==='function'?cf291PartnerName():'Silvia'})`:origin==='other'?'Aportación externa':`Yo (${typeof cf291PersonName==='function'?cf291PersonName():'Jesús'})`;
+    if(!destination){preview.innerHTML='<i class="fas fa-arrow-right-arrow-left"></i> Elige la cuenta común de destino.';return;}
+    preview.innerHTML='<i class="fas fa-circle-notch fa-spin"></i> Calculando cómo quedarán las cuentas…';
+    const destinationBalance=await calculateAccountBalance(destination);
+    let sourceHtml=`<div><small>QUIÉN APORTA</small><b>${cf264Escape(originLabel)}</b>${origin==='partner'?'<em>La cuenta de origen la confirmará esa persona.</em>':''}</div>`;
+    if(source){const sourceBalance=await calculateAccountBalance(source);sourceHtml=`<div><small>SALE DE</small><b>${cf264Escape(source)}</b><span>${formatCurrency(sourceBalance)} <i class="fas fa-arrow-right"></i> ${formatCurrency(sourceBalance-amount)}</span></div>`;}
+    preview.innerHTML=`<div class="cf306-route"><div>${sourceHtml}</div><i class="fas fa-arrow-right"></i><div><small>LLEGA A</small><b>${cf264Escape(destination)}</b><span>${formatCurrency(destinationBalance)} <i class="fas fa-arrow-right"></i> ${formatCurrency(destinationBalance+amount)}</span></div></div><small class="cf306-preview-caption">Saldos antes <i class="fas fa-arrow-right"></i> después de guardar${amount?' esta aportación':''}.</small>`;
+  }
+  const updateContributionFieldsV306=updateContributionFields;
+  updateContributionFields=async function(){const output=await updateContributionFieldsV306();await cf306UpdateContributionPreview();return output;};
+  const openContributionModalV306=openContributionModal;
+  openContributionModal=async function(){
+    const output=await openContributionModalV306();const modal=document.querySelector('#contribution-modal .modal'),amount=document.getElementById('contribution-amount'),source=document.getElementById('contribution-source'),destination=document.getElementById('contribution-destination');
+    if(!modal)return output;
+    document.getElementById('cf306-contribution-preview')?.remove();
+    const anchor=document.querySelector('#contribution-date')?.closest('.form-row')||modal.querySelector('.form-actions');
+    anchor?.insertAdjacentHTML('beforebegin','<section id="cf306-contribution-preview" class="cf306-contribution-preview"><i class="fas fa-circle-notch fa-spin"></i> Calculando cómo quedarán las cuentas…</section>');
+    [amount,source,destination].filter(Boolean).forEach(field=>{field.oninput=cf306UpdateContributionPreview;field.onchange=async event=>{if(event.target===document.getElementById('contribution-origin'))await updateContributionFields();else await cf306UpdateContributionPreview();};});
+    await cf306UpdateContributionPreview();return output;
+  };
+  const saveContributionV306=saveContribution;
+  saveContribution=async function(){
+    const origin=document.getElementById('contribution-origin')?.value,source=document.getElementById('contribution-source')?.value,amount=Math.abs(Number(document.getElementById('contribution-amount')?.value)||0);
+    if(origin!=='partner'&&source&&amount){const balance=await calculateAccountBalance(source),after=balance-amount;if(after<0&&!confirm(`Esta aportación dejará ${source} en ${formatCurrency(after)}. ¿Quieres guardarla igualmente?`))return;}
+    return saveContributionV306();
+  };
+  function cf306Normalise(value){return String(value||'').toLocaleLowerCase('es-ES').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');}
+  function cf306SimilarCategories(name,data){const target=cf306Normalise(name);if(!target)return[];return ['gastos_personales','gastos_compartidos'].flatMap(type=>(cf299Categories(type,data)||[]).map(category=>({type,category,key:cf306Normalise(category)}))).filter(item=>item.key&&(item.key===target||item.key.includes(target)||target.includes(item.key)||(Math.min(item.key.length,target.length)>=5&&[...item.key].filter((char,index)=>char===target[index]).length>=Math.min(item.key.length,target.length)-1)));}
+  function cf306ChooseCategoryScope(type){
+    const personal=type==='gastos_personales',shared=type==='gastos_compartidos';
+    return `<div class="cf306-category-scope ${personal||shared?'':'cf306-category-scope-hidden'}"><label>Esta categoría es</label><div><button type="button" class="${personal?'active':''}" onclick="cf306SetCategoryScope('gastos_personales')"><i class="fas fa-user"></i> Para mí</button><button type="button" class="${shared?'active':''}" onclick="cf306SetCategoryScope('gastos_compartidos')"><i class="fas fa-house"></i> Para casa</button></div><small>Se guardará dentro de las categorías ${shared?'compartidas':'personales'}.</small></div>`;
+  }
+  function cf306OpenCategoryComposer(type,afterSave){
+    currentCategoryType=type;window.cf306AfterCategorySave=afterSave;document.getElementById('cf306-category-modal')?.remove();
+    document.body.insertAdjacentHTML('beforeend',`<div id="cf306-category-modal" class="modal-overlay active cf306-category-modal"><div class="modal"><header class="modal-header"><div><h3 class="modal-title">Nueva categoría</h3><p class="cf306-category-sub">Dale un nombre claro para encontrarla fácilmente.</p></div><button class="close-btn" onclick="cf306CloseCategoryComposer()">&times;</button></header><div class="modal-body">${cf306ChooseCategoryScope(type)}<label class="cf306-category-field">Nombre<input id="cf306-category-name" type="text" placeholder="Ej. Gimnasio" autocomplete="off"></label><label class="cf306-category-field">Emoji<input id="cf306-category-emoji" type="text" value="🏷️" maxlength="4" placeholder="🏷️"></label><small id="cf306-category-warning" class="cf306-category-warning"></small></div><footer class="form-actions"><button type="button" class="btn-secondary" onclick="cf306CloseCategoryComposer()">Cancelar</button><button type="button" class="btn-primary" onclick="cf306SaveCategoryComposer()">Guardar categoría</button></footer></div></div>`);
+    const name=document.getElementById('cf306-category-name');name?.focus();name?.addEventListener('input',async()=>{const data=await getData(),matches=cf306SimilarCategories(name.value,data),warning=document.getElementById('cf306-category-warning');if(warning)warning.textContent=matches.length?`Ya existe una parecida: ${matches.slice(0,2).map(item=>`${item.category} · ${item.type==='gastos_compartidos'?'Para casa':'Para mí'}`).join(', ')}.`:'';});
+  }
+  function cf306SetCategoryScope(type){currentCategoryType=type;const scope=document.querySelector('#cf306-category-modal .cf306-category-scope');if(!scope)return;scope.outerHTML=cf306ChooseCategoryScope(type);}
+  function cf306CloseCategoryComposer(){document.getElementById('cf306-category-modal')?.remove();window.cf306AfterCategorySave=null;currentCategoryType='';}
+  async function cf306SaveCategoryComposer(){
+    const name=document.getElementById('cf306-category-name')?.value.trim(),emoji=document.getElementById('cf306-category-emoji')?.value.trim()||'🏷️',type=currentCategoryType;if(!name||!type){showToast('Escribe un nombre para la categoría','error');return;}
+    const data=await getData(),matches=cf306SimilarCategories(name,data);if(matches.length){const same=matches.find(item=>item.key===cf306Normalise(name));if(same){showToast(`Ya existe “${same.category}” en ${same.type==='gastos_compartidos'?'Para casa':'Para mí'}`,'error');return;}if(!confirm(`Ya existe una categoría parecida: ${matches[0].category} · ${matches[0].type==='gastos_compartidos'?'Para casa':'Para mí'}. ¿Quieres crearla igualmente?`))return;}
+    try{const saved=await cf299PersistCategory(type,name,emoji);if(!saved)return;const after=window.cf306AfterCategorySave;cf306CloseCategoryComposer();if(typeof after==='function')await after(saved,type);else await renderSettingsView();showToast(`Categoría guardada en ${type==='gastos_compartidos'?'Para casa':'Para mí'}`,'success');}catch(error){console.error(error);showToast('No se pudo guardar la categoría: '+error.message,'error');}
+  }
+  openAddCategoryModal=function(type){cf306OpenCategoryComposer(type);};
+  closeAddCategoryModal=function(){cf306CloseCategoryComposer();};
+  cf299AddCategoryFromTransaction=async function(type){cf306OpenCategoryComposer(type,async(saved,scope)=>{cf299RefreshTransactionCategories(scope,saved);if(typeof cf305RefreshTransactionScope==='function')cf305RefreshTransactionScope();});};
+  document.head.insertAdjacentHTML('beforeend',`<style>
+    .cf306-contribution-preview{margin:2px 0 18px;padding:14px 15px;border:1px solid #e1e8df;border-radius:16px;background:#f7faf6;color:#6e7c6e;font-size:11px;font-weight:750}.cf306-route{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);gap:8px;align-items:center}.cf306-route>i{text-align:center;color:#93a292;font-size:11px}.cf306-route>div>div{min-width:0}.cf306-route small,.cf306-route b,.cf306-route span,.cf306-route em{display:block}.cf306-route small{color:#899489;font-size:9px;font-style:normal;font-weight:900;letter-spacing:.45px}.cf306-route b{overflow:hidden;margin-top:3px;color:#354035;font-size:12px;text-overflow:ellipsis;white-space:nowrap}.cf306-route span{margin-top:4px;color:#637063;font-size:10px;font-weight:800}.cf306-route em{margin-top:4px;color:#7f897f;font-size:9px;font-style:normal;line-height:1.25}.cf306-preview-caption{display:block;margin-top:10px;color:#929b92;font-size:9px}.cf306-category-modal .modal{max-width:440px}.cf306-category-sub{margin:4px 0 0;color:#7b867c;font-size:11px;font-weight:650}.cf306-category-scope{margin-bottom:19px}.cf306-category-scope-hidden{display:none}.cf306-category-scope>label,.cf306-category-field{display:block;color:#687368;font-size:10px;font-weight:900;letter-spacing:.55px;text-transform:uppercase}.cf306-category-scope>div{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.cf306-category-scope button{min-height:45px;border:1px solid #dce4da;border-radius:13px;background:#f7f9f6;color:#566257;font:800 12px inherit}.cf306-category-scope button.active{border-color:#69b877;background:#edf7ed;color:#28733b;box-shadow:0 4px 12px rgba(69,143,81,.1)}.cf306-category-scope small{display:block;margin:8px 2px 0;color:#7c877d;font-size:10px;font-weight:650}.cf306-category-field{margin-top:15px}.cf306-category-field input{width:100%;min-height:46px;box-sizing:border-box;margin-top:7px;padding:0 12px;border:1px solid #e0e6df;border-radius:13px;background:#fbfcfa;color:#283228;font:700 14px inherit;text-transform:none}.cf306-category-warning{display:block;min-height:16px;margin:9px 1px 0;color:#a07848;font-size:10px;font-weight:700;line-height:1.35}@media(max-width:768px){.cf306-category-modal{align-items:flex-end!important;padding:0!important}.cf306-category-modal .modal{width:100%!important;max-width:none!important;margin:0!important;border-radius:25px 25px 0 0!important}.cf306-category-modal .modal-header{padding:20px 20px 12px!important}.cf306-category-modal .modal-body{padding:10px 20px 19px!important}.cf306-category-modal .form-actions{padding:13px 20px calc(13px + env(safe-area-inset-bottom,0px))!important}.cf306-route{gap:6px}.cf306-contribution-preview{margin-bottom:16px}}
+  </style>`);
+  /* v2.6.7 — Un pago real puede liquidar un recibo fijo sin duplicarlo. */
+  function cf307FixedText(value){return typeof cf303Text==='function'?cf303Text(value):String(value||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+  function cf307TransactionDate(value){const raw=String(value||'').slice(0,10);return raw?new Date(`${raw}T12:00:00`):new Date();}
+  async function cf307FindFixedMatch(transaction){
+    if(transaction?.type!=='gastos_compartidos')return null;
+    const date=cf307TransactionDate(transaction.date),month=date.getMonth(),year=date.getFullYear(),monthKey=`${month}-${year}`,amount=Math.abs(Number(transaction.amount)||0),description=cf307FixedText(transaction.description),category=cf307FixedText(transaction.category);
+    if(!amount||!description)return null;
+    const [fixedResult,paidResult]=await Promise.all([supabaseClient.from('fixed_expenses').select('*').eq('type','gastos_compartidos'),supabaseClient.from('fixed_expenses_paid').select('fixed_expense_id').eq('month_key',monthKey)]);
+    const paid=new Set((paidResult.data||[]).map(item=>String(item.fixed_expense_id)));
+    const match=(fixedResult.data||[]).find(fixed=>{
+      const active=(fixed.months||[0,1,2,3,4,5,6,7,8,9,10,11]).includes(month),name=cf307FixedText(fixed.name),sameAmount=Math.abs(Math.abs(Number(fixed.amount)||0)-amount)<0.02,mentionsName=name.length>=4&&(description.includes(name)||name.includes(description)||category===name);
+      return active&&!paid.has(String(fixed.id))&&sameAmount&&mentionsName;
+    });
+    return match?{fixed:match,monthKey}:null;
+  }
+  async function cf307LinkFixedPayment(match,transaction){
+    if(!match||!transaction?.id)return;
+    const paid=await supabaseClient.from('fixed_expenses_paid').insert({month_key:match.monthKey,fixed_expense_id:match.fixed.id});
+    if(paid.error&&paid.error.code!=='23505'){showToast('El gasto se guardó, pero no se pudo marcar el recibo como pagado','error');return;}
+    const linked=await supabaseClient.from('transactions').update({fixed_expense_id:match.fixed.id}).eq('id',transaction.id);
+    if(linked.error){showToast('El recibo se marcó como pagado, pero no se pudo vincular al movimiento','info');}
+    invalidateCache();dataCache=null;showToast(`${match.fixed.name} marcado como pagado desde ${transaction.account}`,'success');
+  }
+  function cf307AskToLink(match,account){return confirm(`Parece el recibo fijo “${match.fixed.name}” (${formatCurrency(Math.abs(Number(match.fixed.amount)||0))}).\n\n¿Quieres marcarlo como pagado desde ${account}?\n\nNo se creará otro gasto ni se descontará nada de la antigua cuenta vinculada.`);}
+  const saveTransactionClickV307=saveTransactionClick;
+  saveTransactionClick=async function(){
+    const before=await getData(),knownIds=new Set((before.transactions||[]).map(item=>String(item.id))),wasEditing=Boolean(editingId),candidate={type:currentType,date:document.getElementById('txn-date')?.value,description:document.getElementById('txn-description')?.value,category:document.getElementById('txn-category')?.value,account:document.getElementById('txn-account')?.value,amount:Number(document.getElementById('txn-amount')?.value)};
+    const match=await cf307FindFixedMatch(candidate),shouldLink=match&&cf307AskToLink(match,candidate.account);const output=await saveTransactionClickV307();
+    if(shouldLink&&!wasEditing){invalidateCache();const fresh=await getData(true),created=(fresh.transactions||[]).find(item=>!knownIds.has(String(item.id)));if(created)await cf307LinkFixedPayment(match,created);}
+    return output;
+  };
+  const cf257ConfirmV307=cf257Confirm;
+  cf257Confirm=async function(id,index){
+    const item=cf257WalletPending.find(entry=>String(entry.id)===String(id)),account=document.getElementById(`cf257-account-${index}`)?.value,type=document.getElementById(`cf257-type-${index}`)?.value,category=document.getElementById(`cf257-category-${index}`)?.value,description=document.getElementById(`cf257-description-${index}`)?.value?.trim()||item?.merchant||'Pago con tarjeta';
+    const candidate={type,date:item?.transaction_date||new Date().toISOString(),description,category,account,amount:Math.abs(Number(item?.amount)||0)},match=await cf307FindFixedMatch(candidate),shouldLink=match&&cf307AskToLink(match,account);const output=await cf257ConfirmV307(id,index);
+    if(shouldLink){invalidateCache();const fresh=await getData(true),dateKey=String(candidate.date).slice(0,10),created=(fresh.transactions||[]).find(transaction=>transaction.type===type&&transaction.account===account&&String(transaction.date).slice(0,10)===dateKey&&Math.abs(Math.abs(Number(transaction.amount)||0)-candidate.amount)<.02&&cf307FixedText(transaction.description)===cf307FixedText(description));if(created)await cf307LinkFixedPayment(match,created);}
+    return output;
+  };
   initializeApp();
   </script>
 </body>
