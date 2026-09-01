@@ -17836,7 +17836,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.6.12';
+const CF_APP_VERSION='v2.6.14';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -19178,6 +19178,93 @@ const CF_APP_VERSION='v2.6.12';
   document.head.insertAdjacentHTML('beforeend',`<style>@media(max-width:768px){
     #mobile-nav-container:after{display:none!important}.mobile-nav{bottom:11px!important}.cf257-wallet-notice{box-sizing:border-box!important;max-width:100%!important;min-width:0!important}.cf257-wallet-copy{flex:1!important}.cf257-wallet-notice button{white-space:nowrap!important}
   }</style>`);
+  /* v2.6.13 — Lectura inmediata de entradas/salidas y fondo sólido de navegación. */
+  function cf313ColorAmounts(root=document){
+    root.querySelectorAll('.cf2-movement-amount,.cf276-row>strong,.cf264-movement>strong,.transaction-amount,.timeline-container [class*="amount"]').forEach(node=>{
+      const value=String(node.textContent||'').trim();
+      node.classList.remove('cf313-income','cf313-expense');
+      if(/^[+]/.test(value))node.classList.add('cf313-income');
+      else if(/^[−-]/.test(value))node.classList.add('cf313-expense');
+    });
+    ['ingresos-total'].forEach(id=>document.getElementById(id)?.classList.add('cf313-income'));
+    ['gastos-personales-total','gastos-compartidos-total'].forEach(id=>document.getElementById(id)?.classList.add('cf313-expense'));
+  }
+  document.head.insertAdjacentHTML('beforeend',`<style>
+    .cf313-income{color:#419553!important}.cf313-expense{color:#c85d5b!important}#ingresos-total{color:#419553!important}#gastos-personales-total,#gastos-compartidos-total{color:#c85d5b!important}@media(max-width:768px){
+      #mobile-nav-container:after{display:block!important;content:""!important;position:fixed!important;z-index:8999!important;right:0!important;bottom:0!important;left:0!important;height:96px!important;background:#fffdf9!important;pointer-events:none!important}.mobile-nav{z-index:9000!important}.cf276-metric:not(.expense):first-child strong{color:#419553!important}.cf276-metric.expense strong{color:#c85d5b!important}
+    }
+  </style>`);
+  const cf313Observer=new MutationObserver(records=>{if(records.some(record=>record.addedNodes.length))cf313ColorAmounts(document);});
+  cf313Observer.observe(document.body,{childList:true,subtree:true});cf313ColorAmounts(document);
+  /* v2.6.14 — Catálogos separados por persona; las categorías de casa sí son comunes. */
+  let cf314SharedCategoryRows=null;
+  function cf314DecodeCategoryRow(row){
+    const value=row?.categories,items=[],emojis={};
+    if(Array.isArray(value)){
+      value.forEach(entry=>{
+        const [rawName,rawEmoji]=String(entry||'').split('|||'),name=rawName?.trim();
+        if(name){items.push(name);if(rawEmoji?.trim())emojis[name]=rawEmoji.trim();}
+      });
+    }else if(value&&typeof value==='object'){
+      (Array.isArray(value.items)?value.items:[]).forEach(name=>{if(String(name||'').trim())items.push(String(name).trim());});
+      Object.assign(emojis,value.emojis||{});
+    }
+    return {items:cf299Unique(items),emojis};
+  }
+  function cf314RowsForType(type,data=dataCache){
+    const ownRows=(data?.customCategories||[]).filter(row=>row.type===type);
+    // Las personales pertenecen únicamente al perfil iniciado. Las de hogar se
+    // comparten: cada miembro puede haber creado parte del mismo catálogo.
+    if(type!=='gastos_compartidos')return ownRows;
+    const sharedRows=(cf314SharedCategoryRows||[]).filter(row=>row.type===type);
+    return sharedRows.length?sharedRows:ownRows;
+  }
+  cf300Stored=function(type,data=dataCache){
+    const merged={items:[],emojis:{}};
+    cf314RowsForType(type,data).forEach(row=>{
+      const decoded=cf314DecodeCategoryRow(row);
+      merged.items.push(...decoded.items);
+      Object.entries(decoded.emojis).forEach(([name,emoji])=>{if(emoji&&!merged.emojis[name])merged.emojis[name]=emoji;});
+    });
+    merged.items=cf299Unique(merged.items);
+    return merged;
+  };
+  cf299Categories=function(type,data=dataCache){
+    const stored=cf300Stored(type,data);
+    return cf299Unique([...(cf299BaseCategories[type]||[]),...stored.items]);
+  };
+  const getDataV314=getData;
+  getData=async function(forceRefresh=false){
+    const data=await getDataV314(forceRefresh);
+    if(!cf314SharedCategoryRows||forceRefresh){
+      const {data:rows,error}=await supabaseClient.from('custom_categories').select('*').eq('type','gastos_compartidos');
+      if(!error)cf314SharedCategoryRows=rows||[];
+    }
+    cf299ApplyCategories(data);
+    return data;
+  };
+  const cf300SavePayloadV314=cf300SavePayload;
+  cf300SavePayload=async function(type,names,emojis){
+    const cleanNames=cf299Unique(names),encoded=cleanNames.map(name=>`${name}|||${String(emojis?.[name]||cf300DefaultEmoji[type]?.[name]||'🏷️').replace(/\|/g,'')}`);
+    // Versiones antiguas podían dejar más de una fila para el mismo catálogo.
+    // Consolidamos sin perder ninguna categoría: a partir de ahora editar o
+    // eliminar una categoría sí se refleja en todo el catálogo de su dueño.
+    const {data:rows,error:lookupError}=await supabaseClient.from('custom_categories').select('id').eq('type',type).eq('user_id',currentUser.id);
+    if(lookupError)throw lookupError;
+    const primary=rows?.[0];
+    const result=primary
+      ?await supabaseClient.from('custom_categories').update({categories:encoded}).eq('id',primary.id)
+      :await supabaseClient.from('custom_categories').insert({user_id:currentUser.id,type,categories:encoded});
+    if(result.error)throw result.error;
+    const duplicateIds=(rows||[]).slice(1).map(row=>row.id).filter(Boolean);
+    if(duplicateIds.length){
+      const cleanup=await supabaseClient.from('custom_categories').delete().in('id',duplicateIds);
+      if(cleanup.error)console.warn('No se pudieron consolidar categorías antiguas',cleanup.error);
+    }
+    if(type==='gastos_compartidos')cf314SharedCategoryRows=null;
+    CATEGORIES[type]=cleanNames;invalidateCache();dataCache=null;const fresh=await getData(true);cf299ApplyCategories(fresh);
+    return {items:cleanNames,emojis:emojis||{}};
+  };
   initializeApp();
   </script>
 </body>
