@@ -17834,7 +17834,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.6.2';
+const CF_APP_VERSION='v2.6.5';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -18958,6 +18958,114 @@ const CF_APP_VERSION='v2.6.2';
   const renderMobileMoreV302=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV302();const page=document.querySelector('.cf207-page');if(!page||page.querySelector('.cf302-wallet-section'))return;page.insertAdjacentHTML('beforeend',`<section class="cf207-section cf302-wallet-section"><div class="cf207-section-title">Automatización</div><div class="cf207-panel"><button class="cf207-row" onclick="cf302OpenWalletKey()"><span class="cf207-icon" style="background:#f3effb;color:#80679d"><i class="fas fa-wallet"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Atajos de Apple Wallet</span><span class="cf207-row-sub">Genera la clave para registrar pagos pendientes</span></span><i class="fas fa-chevron-right"></i></button></div></section>`);};
   document.head.insertAdjacentHTML('beforeend',`<style>@media(max-width:768px){.cf302-key-modal{align-items:flex-end!important;padding:0!important}.cf302-key-modal .modal{width:100%!important;max-width:560px!important;margin:0!important;border-radius:26px 26px 0 0!important;background:#f8faf6!important}.cf302-key-modal .modal-header{padding:20px 20px 13px!important;border:0!important;background:transparent!important}.cf302-key-modal .modal-body{padding:8px 20px calc(22px + env(safe-area-inset-bottom,0px))!important;background:transparent!important}.cf302-subtitle{margin:4px 0 0;color:#879187;font-size:10px;font-weight:700}.cf302-intro{display:flex;gap:10px;margin-bottom:17px;padding:13px;border:1px solid #e3e7e0;border-radius:17px;background:#fff}.cf302-intro>i{width:34px;height:34px;display:grid;place-items:center;flex:0 0 auto;border-radius:11px;background:#f3effb;color:#80679d}.cf302-intro b,.cf302-intro small{display:block}.cf302-intro b{font-size:12px;font-weight:900}.cf302-intro small{margin-top:3px;color:#859085;font-size:9px;font-weight:700;line-height:1.35}.cf302-label{display:block;color:#768176;font-size:10px;font-weight:900;letter-spacing:.5px;text-transform:uppercase}.cf302-label input{margin-top:7px;text-transform:none;letter-spacing:0}.cf302-generate{width:100%;min-height:51px;margin-top:15px;border-radius:16px!important;background:#303b33!important;font-size:13px!important}.cf302-key-result{margin-top:14px}.cf302-key-result p{margin:0 0 9px;color:#6f7b70;font-size:10px;font-weight:700;line-height:1.4}.cf302-key-result code{display:block;overflow-wrap:anywhere;padding:11px;border-radius:13px;background:#eef2ec;color:#334034;font-size:10px;line-height:1.45}.cf302-copy{width:100%;min-height:45px;margin-top:9px;border:0;border-radius:14px;background:#e6f2e4;color:#477946;font:850 12px inherit}.cf302-key-result small{display:block;margin-top:8px;color:#8b948b;font-size:9px;font-weight:700;text-align:center}}</style>`);
+  /* v2.6.3 — barreras antes de guardar y revisión sencilla de la salud de las cuentas. */
+  function cf303Text(value){return String(value||'').toLocaleLowerCase('es-ES').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');}
+  function cf303Duplicate(data,transaction){const date=new Date(transaction.date);return (data.transactions||[]).find(item=>{const itemDate=new Date(item.date),sameDay=itemDate.toDateString()===date.toDateString();return sameDay&&item.account===transaction.account&&Math.abs(Math.abs(Number(item.amount)||0)-Math.abs(Number(transaction.amount)||0))<0.02&&cf303Text(item.description||item.category)===cf303Text(transaction.description||transaction.category);});}
+  function cf303Undo(id){const bar=document.getElementById('cf303-undo');if(bar)bar.remove();deleteTransaction(id).then(async()=>{invalidateCache();await initializeApp();showToast('Movimiento deshecho','success');});}
+  function cf303OfferUndo(id){document.getElementById('cf303-undo')?.remove();document.body.insertAdjacentHTML('beforeend',`<div id="cf303-undo" class="cf303-undo">Movimiento guardado <button onclick="cf303Undo('${id}')">Deshacer</button></div>`);setTimeout(()=>document.getElementById('cf303-undo')?.remove(),7000);}
+  const saveTransactionClickV303=saveTransactionClick;
+  saveTransactionClick=async function(){
+    const data=await getData(),candidate={type:currentType,date:document.getElementById('txn-date')?.value,description:document.getElementById('txn-description')?.value,category:document.getElementById('txn-category')?.value,account:document.getElementById('txn-account')?.value,amount:Number(document.getElementById('txn-amount')?.value)};
+    const duplicate=cf303Duplicate(data,candidate);if(duplicate&&!confirm(`Parece que ya existe un movimiento igual hoy (${formatCurrency(duplicate.amount)}). ¿Quieres guardarlo igualmente?`))return;
+    const outgoing=String(candidate.type||'').startsWith('gastos');if(outgoing&&candidate.account){const balance=await calculateAccountBalance(candidate.account),after=balance-Math.abs(candidate.amount||0);if(after<0&&!confirm(`Este movimiento dejará ${candidate.account} en ${formatCurrency(after)}. ¿Quieres continuar?`))return;}
+    const fixed=(data.fixedExpenses||[]).find(item=>item.type===candidate.type&&cf303Text(item.name)===cf303Text(candidate.description)&&Math.abs(Math.abs(Number(item.amount)||0)-Math.abs(candidate.amount||0))>=0.02),updateFixed=fixed&&confirm(`El importe de ${fixed.name} ha cambiado. ¿Quieres actualizar el recibo fijo para los próximos meses?`);
+    const wasEditing=editingId,constBefore=new Set((data.transactions||[]).map(item=>String(item.id))),result=await saveTransactionClickV303();
+    if(updateFixed){const {error}=await supabaseClient.from('fixed_expenses').update({amount:Math.abs(candidate.amount)}).eq('id',fixed.id);if(error)showToast('El gasto se guardó, pero no se pudo actualizar el recibo fijo','error');}
+    if(!wasEditing){invalidateCache();const fresh=await getData(true),created=(fresh.transactions||[]).find(item=>!constBefore.has(String(item.id)));if(created)cf303OfferUndo(created.id);}return result;
+  };
+  const renderMobileMoreV303=renderMobileMore;
+  renderMobileMore=function(){renderMobileMoreV303();const page=document.querySelector('.cf207-page');if(!page||page.querySelector('.cf303-safety'))return;getData().then(async data=>{const alerts=await getFixedExpensesAlerts(),duplicates=(data.transactions||[]).filter((item,index,list)=>list.some((other,otherIndex)=>otherIndex<index&&cf303Text(item.description||item.category)===cf303Text(other.description||other.category)&&item.account===other.account&&Math.abs(Math.abs(item.amount)-Math.abs(other.amount))<.02&&new Date(item.date).toDateString()===new Date(other.date).toDateString())).length;page.insertAdjacentHTML('beforeend',`<section class="cf207-section cf303-safety"><div class="cf207-section-title">Revisión rápida</div><div class="cf207-panel"><button class="cf207-row" onclick="switchMobileView('accounts')"><span class="cf207-icon" style="background:#fff3e8;color:#b9784f"><i class="fas fa-shield-heart"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Estado de tus cuentas</span><span class="cf207-row-sub">${alerts.length?`${alerts.length} aviso${alerts.length===1?'':'s'} por recibos próximos`:duplicates?`${duplicates} posible${duplicates===1?'':'s'} duplicado${duplicates===1?'':'s'}`:'Todo parece estar en orden'}</span></span><i class="fas fa-chevron-right"></i></button></div></section>`);});};
+  document.head.insertAdjacentHTML('beforeend',`<style>@media(max-width:768px){.cf303-undo{position:fixed;z-index:10050;right:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:15px;background:#303b33;color:#fff;box-shadow:0 12px 28px rgba(20,28,22,.22);font:800 11px inherit}.cf303-undo button{border:0;border-radius:9px;background:#e8f2e5;color:#315b32;padding:6px 8px;font:900 10px inherit}}</style>`);
+  /* v2.6.4 — Presupuestos guiados: primero se elige para quién es. */
+  function cf304BudgetScope(type){return type==='gastos_compartidos'?'shared':'personal';}
+  function cf304ScopeTitle(type){return cf304BudgetScope(type)==='shared'?'Para casa':'Para mí';}
+  function cf304ScopeHint(type){return cf304BudgetScope(type)==='shared'?'Solo verás categorías compartidas, como Supermercado o Alquiler.':'Solo verás tus categorías personales, como Alimentación u Ocio.';}
+  function cf304RefreshBudgetScope(){
+    const select=document.getElementById('budget-type'),panel=document.getElementById('cf304-budget-scope');
+    if(!select||!panel)return;
+    const type=select.value;
+    panel.querySelectorAll('button[data-type]').forEach(button=>button.classList.toggle('active',button.dataset.type===type));
+    const hint=panel.querySelector('.cf304-scope-hint');if(hint)hint.textContent=cf304ScopeHint(type);
+  }
+  const updateBudgetCategoriesV304=updateBudgetCategories;
+  updateBudgetCategories=function(){
+    updateBudgetCategoriesV304();
+    const type=document.getElementById('budget-type')?.value,categorySelect=document.getElementById('budget-category');
+    if(!type||!categorySelect)return;
+    const selected=categorySelect.value;
+    const suffix=cf304ScopeTitle(type);
+    categorySelect.innerHTML=(CATEGORIES[type]||[]).map(category=>{
+      const emoji=typeof cf300Emoji==='function'?cf300Emoji(type,category):'';
+      return `<option value="${cf264Escape(category)}">${emoji?emoji+' ':''}${cf264Escape(category)} · ${suffix}</option>`;
+    }).join('');
+    if([...categorySelect.options].some(option=>option.value===selected))categorySelect.value=selected;
+    cf304RefreshBudgetScope();
+  };
+  const openBudgetModalV304=openBudgetModal;
+  openBudgetModal=function(){
+    openBudgetModalV304();
+    const select=document.getElementById('budget-type'),modal=document.getElementById('budget-modal');
+    if(!select||!modal)return;
+    select.innerHTML='<option value="gastos_personales">Para mí</option><option value="gastos_compartidos">Para casa</option>';
+    const mobileShared=window.innerWidth<=768&&typeof cf274BudgetState!=='undefined'&&cf274BudgetState.scope==='shared';
+    select.value=mobileShared?'gastos_compartidos':'gastos_personales';
+    const group=select.closest('.form-group');
+    if(group&&!document.getElementById('cf304-budget-scope')){
+      group.insertAdjacentHTML('beforebegin',`<div class="form-group cf304-budget-scope" id="cf304-budget-scope"><label class="form-label">Este presupuesto es</label><div class="cf304-scope-options"><button type="button" data-type="gastos_personales" onclick="document.getElementById('budget-type').value='gastos_personales';updateBudgetCategories()"><i class="fas fa-user"></i> Para mí</button><button type="button" data-type="gastos_compartidos" onclick="document.getElementById('budget-type').value='gastos_compartidos';updateBudgetCategories()"><i class="fas fa-house"></i> Para casa</button></div><small class="cf304-scope-hint"></small></div>`);
+    }
+    const label=group?.querySelector('label');if(label)label.textContent='Ámbito';
+    updateBudgetCategories();
+  };
+  document.head.insertAdjacentHTML('beforeend',`<style>
+    .cf304-budget-scope{margin-bottom:20px}.cf304-scope-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}.cf304-scope-options button{min-height:48px;border:1px solid #dce4da;border-radius:14px;background:#f7f9f6;color:#556158;font:800 13px inherit;cursor:pointer}.cf304-scope-options button i{margin-right:6px}.cf304-scope-options button.active{background:#edf7ed;border-color:#66bd73;color:#27743b;box-shadow:0 4px 12px rgba(69,143,81,.12)}.cf304-scope-hint{display:block;margin:9px 2px 0;color:#758078;font-size:11px;line-height:1.35}@media(max-width:768px){#budget-modal .modal{border-radius:24px 24px 0 0}.cf304-budget-scope{margin-bottom:18px}.cf304-scope-options button{min-height:52px;border-radius:16px;font-size:13px}}
+  </style>`);
+  /* v2.6.5 — Gastos sin ambigüedad: decide primero si es para ti o para casa. */
+  function cf305ScopeName(type){return type==='gastos_compartidos'?'Para casa':'Para mí';}
+  function cf305ScopeDescription(type){return type==='gastos_compartidos'?'Categorías compartidas: Supermercado, Alquiler, Suministros…':'Categorías personales: Alimentación, Ocio, Transporte…';}
+  function cf305SetTransactionScope(type){
+    if(!['gastos_personales','gastos_compartidos'].includes(type))return;
+    currentType=type;
+    const title=document.getElementById('modal-title');if(title)title.textContent=type==='gastos_compartidos'?'Nuevo gasto para casa':'Nuevo gasto personal';
+    if(typeof cf299RefreshTransactionCategories==='function')cf299RefreshTransactionCategories(type);
+    if(typeof cf295InstallDirectContribution==='function')cf295InstallDirectContribution(type);
+    cf305RefreshTransactionScope();
+  }
+  function cf305RefreshTransactionScope(){
+    const panel=document.getElementById('cf305-transaction-scope');if(!panel)return;
+    panel.querySelectorAll('button[data-type]').forEach(button=>button.classList.toggle('active',button.dataset.type===currentType));
+    const note=panel.querySelector('.cf305-scope-note');if(note)note.textContent=cf305ScopeDescription(currentType);
+    const categoryGroup=document.getElementById('txn-category')?.closest('.form-group');
+    if(categoryGroup){let hint=categoryGroup.querySelector('.cf305-category-hint');if(!hint){hint=document.createElement('small');hint.className='cf305-category-hint';categoryGroup.appendChild(hint);}hint.textContent=`Estás eligiendo una categoría ${currentType==='gastos_compartidos'?'compartida':'personal'}.`;}
+  }
+  const openTransactionModalV305=openTransactionModal;
+  openTransactionModal=async function(type){
+    await openTransactionModalV305(type);
+    if(!String(type||'').startsWith('gastos'))return;
+    const modal=document.querySelector('#transaction-modal .modal'),categoryGroup=document.getElementById('txn-category')?.closest('.form-group');
+    if(!modal||!categoryGroup)return;
+    document.getElementById('cf305-transaction-scope')?.remove();
+    categoryGroup.insertAdjacentHTML('beforebegin',`<div class="form-group cf305-transaction-scope" id="cf305-transaction-scope"><label class="form-label">Este gasto es</label><div class="cf305-scope-options"><button type="button" data-type="gastos_personales" onclick="cf305SetTransactionScope('gastos_personales')"><i class="fas fa-user"></i> Para mí</button><button type="button" data-type="gastos_compartidos" onclick="cf305SetTransactionScope('gastos_compartidos')"><i class="fas fa-house"></i> Para casa</button></div><small class="cf305-scope-note"></small></div>`);
+    cf305SetTransactionScope(type);
+  };
+  function cf305WalletSetIntent(index,type){
+    const select=document.getElementById(`cf257-type-${index}`);if(!select)return;
+    select.value=type;cf257RefreshCategories(index);cf305DecorateWalletCard(index);cf257UpdatePreview(index);
+  }
+  function cf305DecorateWalletCard(index){
+    const type=document.getElementById(`cf257-type-${index}`)?.value||'gastos_personales';
+    const card=document.querySelector(`#cf257-wallet-modal .cf257-pending-card:nth-of-type(${index+1})`)||document.getElementById(`cf257-type-${index}`)?.closest('.cf257-pending-card');
+    const typeSelect=document.getElementById(`cf257-type-${index}`),category=document.getElementById(`cf257-category-${index}`);if(!typeSelect||!category)return;
+    const current=category.value;
+    category.innerHTML=(CATEGORIES[type]||[]).map(name=>`<option value="${cf257Escape(name)}">${cf257Escape(name)} · ${cf305ScopeName(type)}</option>`).join('');
+    if([...category.options].some(option=>option.value===current))category.value=current;
+    const label=typeSelect.closest('label');if(label){label.classList.add('cf305-wallet-intent');let intent=label.querySelector('.cf305-wallet-options');if(!intent){intent=document.createElement('div');intent.className='cf305-wallet-options';intent.innerHTML=`<button type="button" data-type="gastos_personales" onclick="cf305WalletSetIntent(${index},'gastos_personales')"><i class="fas fa-user"></i> Para mí</button><button type="button" data-type="gastos_compartidos" onclick="cf305WalletSetIntent(${index},'gastos_compartidos')"><i class="fas fa-house"></i> Para casa</button>`;typeSelect.after(intent);}intent.querySelectorAll('button').forEach(button=>button.classList.toggle('active',button.dataset.type===type));}
+    if(card){let note=card.querySelector('.cf305-wallet-note');if(!note){note=document.createElement('small');note.className='cf305-wallet-note';card.querySelector('.cf257-fields')?.insertAdjacentElement('afterend',note);}note.textContent=cf305ScopeDescription(type);}
+  }
+  const cf257OpenPendingV305=cf257OpenPending;
+  cf257OpenPending=async function(){const output=await cf257OpenPendingV305();cf257WalletPending.forEach((_,index)=>cf305DecorateWalletCard(index));return output;};
+  document.head.insertAdjacentHTML('beforeend',`<style>
+    .cf305-transaction-scope{margin-bottom:20px}.cf305-scope-options,.cf305-wallet-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}.cf305-scope-options button,.cf305-wallet-options button{min-height:47px;border:1px solid #dce4da;border-radius:14px;background:#f7f9f6;color:#556158;font:800 13px inherit;cursor:pointer}.cf305-scope-options button i,.cf305-wallet-options button i{margin-right:5px}.cf305-scope-options button.active,.cf305-wallet-options button.active{background:#edf7ed;border-color:#66bd73;color:#27743b;box-shadow:0 4px 12px rgba(69,143,81,.12)}.cf305-scope-note,.cf305-category-hint,.cf305-wallet-note{display:block;margin:8px 2px 0;color:#758078;font-size:11px;font-weight:650;line-height:1.35}.cf305-wallet-intent>select{display:none}.cf305-wallet-intent{grid-column:1/-1}.cf305-wallet-options button{min-height:39px;border-radius:11px;font-size:11px}.cf305-wallet-note{margin:11px 1px 0;padding:9px 10px;border-radius:10px;background:#f3f6f1;color:#687669}@media(max-width:768px){.cf305-transaction-scope{margin-bottom:23px!important;padding:14px!important;border:1px solid #e5e9e3!important;border-radius:18px!important;background:#fff!important}.cf305-transaction-scope .form-label{margin-bottom:10px!important}.cf305-scope-options button{min-height:50px;border-radius:15px}.cf305-category-hint{margin-top:8px!important}.cf305-wallet-options button{min-height:42px;font-size:11px}.cf305-wallet-intent{gap:7px!important}}
+  </style>`);
   initializeApp();
   </script>
 </body>
