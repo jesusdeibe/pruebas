@@ -17836,7 +17836,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.6.15';
+const CF_APP_VERSION='v2.6.16';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -19295,7 +19295,7 @@ const CF_APP_VERSION='v2.6.15';
   async function cf315OpenPanel(){
     try{
       await cf315LoadRows();document.getElementById('cf315-panel')?.remove();
-      const ownerIds=[...new Set(cf315AllRows.filter(row=>row.type!=='gastos_compartidos'&&row.user_id).map(row=>String(row.user_id)))];
+      const ownerIds=[...new Set([...cf315AllRows.filter(row=>row.type!=='gastos_compartidos'&&row.user_id).map(row=>String(row.user_id)),...Array.from(cf316KnownByOwner.keys()).map(key=>key.split('|')[0])])];
       if(currentUser?.id&&!ownerIds.includes(String(currentUser.id)))ownerIds.unshift(String(currentUser.id));
       const jesusId=ownerIds.find(id=>cf315OwnerName(id)==='Jesús'),silviaId=ownerIds.find(id=>cf315OwnerName(id)==='Silvia');
       const person=(name,id,types)=>`<section class="cf315-owner ${name.toLowerCase()}"><div class="cf315-owner-head"><img src="assets/avatars/avatar_${name.toLowerCase()}_cartoon.png" alt=""><span><b>${name}</b><small>Categorías personales</small></span></div>${id?types.map(type=>cf315Section(id,type)).join(''):'<div class="cf315-empty">Aún no hay categorías personalizadas.</div>'}</section>`;
@@ -19335,6 +19335,69 @@ const CF_APP_VERSION='v2.6.15';
   const renderSettingsViewV315=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV315();const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf315-desktop-entry'))root.insertAdjacentHTML('afterbegin','<section class="section cf315-desktop-entry"><div class="section-header"><div><h2 class="section-title"><span>🏷️</span> Control de categorías</h2><p class="page-subtitle" style="margin:6px 0 0">Revisa y edita los catálogos de Jesús, Silvia y los comunes.</p></div><button class="btn-primary" onclick="cf315OpenPanel()">Abrir panel</button></div></section>');return output;};
   document.head.insertAdjacentHTML('beforeend',`<style>.cf315-overlay{position:fixed;z-index:11050;inset:0;overflow:auto;background:rgba(30,39,31,.35);backdrop-filter:blur(5px)}.cf315-sheet{width:min(720px,calc(100% - 32px));min-height:100%;margin:0 auto;padding:28px 28px 45px;background:#f8faf6;color:#263127}.cf315-head{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:center;gap:11px}.cf315-head button{width:42px;height:42px;border:0;border-radius:14px;background:#fff;color:#465346;font-size:16px;box-shadow:0 4px 12px rgba(35,48,38,.06)}.cf315-head small{color:#879187;font-size:10px;font-weight:900;letter-spacing:.6px;text-transform:uppercase}.cf315-head h2{margin:3px 0 0;font-size:24px;font-weight:950;letter-spacing:-.7px}.cf315-close{font-size:24px!important}.cf315-intro{margin:17px 0 23px;color:#748075;font-size:12px;font-weight:700;line-height:1.45}.cf315-owner{margin-top:18px;padding:18px;border:1px solid #e0e7dd;border-radius:22px;background:#fff;box-shadow:0 7px 19px rgba(37,50,41,.035)}.cf315-owner-head{display:flex;align-items:center;gap:11px}.cf315-owner-head img,.cf315-common-icon{width:40px;height:40px;border-radius:13px;object-fit:cover;background:#eef3ec}.cf315-common-icon{display:grid;place-items:center;color:#668567}.cf315-owner-head b,.cf315-owner-head small{display:block}.cf315-owner-head b{font-size:15px;font-weight:950}.cf315-owner-head small{margin-top:3px;color:#879187;font-size:10px;font-weight:750}.cf315-group{margin-top:18px}.cf315-group h3{margin:0 0 8px;color:#788378;font-size:10px;font-weight:900;letter-spacing:.65px;text-transform:uppercase}.cf315-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.cf315-category{display:grid;grid-template-columns:29px minmax(0,1fr) auto;align-items:center;gap:7px;min-width:0;padding:9px;border:1px solid #e8ede6;border-radius:13px;background:#fbfcfa;color:#293529;text-align:left;font:800 11px inherit}.cf315-category>span{width:29px;height:29px;display:grid;place-items:center;border-radius:10px;background:#f1f5ef;font-size:15px}.cf315-category b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cf315-category i{color:#9aa49a;font-size:9px}.cf315-empty{margin-top:15px;padding:14px;border-radius:14px;background:#f5f7f3;color:#899389;font-size:11px;font-weight:750;text-align:center}@media(max-width:768px){.cf315-sheet{width:100%;min-height:100%;box-sizing:border-box;padding:20px 20px calc(120px + env(safe-area-inset-bottom,0px));background:#f7f8f5}.cf315-overlay{background:#f7f8f5}.cf315-list{grid-template-columns:1fr}.cf315-owner{padding:15px;border-radius:20px}.cf315-desktop-entry{display:none!important}}</style>`);
+  /* v2.6.16 — Cada persona puede ocultar categorías sin afectar al otro perfil. */
+  function cf316Decode(row){
+    const value=row?.categories,items=[],emojis={},hidden=[];
+    const read=(rawName,rawEmoji)=>{const name=String(rawName||'').trim();if(!name)return;if(name.startsWith('__OCULTA__::')){hidden.push(name.slice(12));return;}items.push(name);if(rawEmoji?.trim())emojis[name]=rawEmoji.trim();};
+    if(Array.isArray(value))value.forEach(entry=>{const parts=String(entry||'').split('|||');read(parts[0],parts[1]);});
+    else if(value&&typeof value==='object'){(Array.isArray(value.items)?value.items:[]).forEach(name=>read(name,value.emojis?.[name]));Object.assign(emojis,value.emojis||{});}
+    return {items:cf299Unique(items),emojis,hidden:cf299Unique(hidden)};
+  }
+  function cf316SameName(a,b){return String(a||'').localeCompare(String(b||''),'es',{sensitivity:'accent'})===0;}
+  function cf316Has(list,name){return (list||[]).some(item=>cf316SameName(item,name));}
+  cf300Stored=function(type,data=dataCache){
+    const merged={items:[],emojis:{},hidden:[]};
+    cf314RowsForType(type,data).forEach(row=>{const decoded=cf316Decode(row);merged.items.push(...decoded.items);merged.hidden.push(...decoded.hidden);Object.assign(merged.emojis,decoded.emojis||{});});
+    merged.items=cf299Unique(merged.items);merged.hidden=cf299Unique(merged.hidden);
+    return merged;
+  };
+  cf299Categories=function(type,data=dataCache){
+    const stored=cf300Stored(type,data),used=(data?.transactions||[]).filter(item=>item.type===type&&String(item.category||'').trim()).map(item=>String(item.category).trim());
+    return cf299Unique([...(cf299BaseCategories[type]||[]),...stored.items,...used]).filter(name=>!cf316Has(stored.hidden,name));
+  };
+  cf300SavePayload=async function(type,names,emojis){
+    const current=cf300Stored(type,dataCache),cleanNames=cf299Unique(names),hidden=(current.hidden||[]).filter(name=>!cf316Has(cleanNames,name)),encoded=[...cleanNames.map(name=>`${name}|||${String(emojis?.[name]||current.emojis?.[name]||cf300DefaultEmoji[type]?.[name]||'🏷️').replace(/\|/g,'')}`),...hidden.map(name=>`__OCULTA__::${name}|||🏷️`)];
+    const {data:rows,error:lookupError}=await supabaseClient.from('custom_categories').select('id').eq('type',type).eq('user_id',currentUser.id);if(lookupError)throw lookupError;
+    const primary=rows?.[0],result=primary?await supabaseClient.from('custom_categories').update({categories:encoded}).eq('id',primary.id):await supabaseClient.from('custom_categories').insert({user_id:currentUser.id,type,categories:encoded});if(result.error)throw result.error;
+    const duplicateIds=(rows||[]).slice(1).map(row=>row.id).filter(Boolean);if(duplicateIds.length)await supabaseClient.from('custom_categories').delete().in('id',duplicateIds);
+    if(type==='gastos_compartidos')cf314SharedCategoryRows=null;CATEGORIES[type]=cleanNames;invalidateCache();dataCache=null;const fresh=await getData(true);cf299ApplyCategories(fresh);return {items:cleanNames,emojis:emojis||{}};
+  };
+  const cf315LoadRowsV316=cf315LoadRows;
+  let cf316KnownByOwner=new Map();
+  cf315LoadRows=async function(){
+    await cf315LoadRowsV316();
+    const {data:transactions,error}=await supabaseClient.from('transactions').select('user_id,type,category');
+    if(!error){cf316KnownByOwner=new Map();(transactions||[]).forEach(item=>{if(!item.user_id||!item.category||!['ingresos','gastos_personales','inversiones'].includes(item.type))return;const key=`${item.user_id}|${item.type}`;if(!cf316KnownByOwner.has(key))cf316KnownByOwner.set(key,[]);cf316KnownByOwner.get(key).push(String(item.category).trim());});}
+    return cf315AllRows;
+  };
+  cf315Catalog=function(ownerId,type){
+    const rows=(ownerId==='common'?cf315AllRows.filter(row=>row.type==='gastos_compartidos'):cf315AllRows.filter(row=>String(row.user_id)===String(ownerId)&&row.type===type));
+    const combined={items:[],emojis:{},hidden:[]};rows.forEach(row=>{const decoded=cf316Decode(row);combined.items.push(...decoded.items);combined.hidden.push(...decoded.hidden);Object.assign(combined.emojis,decoded.emojis||{});});
+    const known=ownerId==='common'?[]:(cf316KnownByOwner.get(`${ownerId}|${type}`)||[]),names=cf299Unique([...(cf299BaseCategories[type]||[]),...combined.items,...known]).filter(name=>!cf316Has(combined.hidden,name));
+    return {rows,names,emojis:combined.emojis,hidden:cf299Unique(combined.hidden)};
+  };
+  cf315Section=function(ownerId,type){
+    const catalog=cf315Catalog(ownerId,type);if(!catalog.names.length)return '';
+    const rows=catalog.names.map((name,index)=>`<div class="cf316-category"><button class="cf315-category" onclick="cf315Edit('${ownerId}','${type}',${index})"><span>${catalog.emojis[name]||cf300DefaultEmoji[type]?.[name]||'🏷️'}</span><b>${cf264Escape(name)}</b><i class="fas fa-pen"></i></button><button class="cf316-delete" onclick="cf316Delete('${ownerId}','${type}',${index})" aria-label="Eliminar ${cf264Escape(name)}"><i class="fas fa-trash"></i></button></div>`).join('');
+    return `<section class="cf315-group"><h3>${cf315TypeLabel[type]||type}</h3><div class="cf315-list">${rows}</div></section>`;
+  };
+  async function cf316SaveOne(ownerId,type,names,emojis,hidden=[]){
+    const visible=cf299Unique(names),cleanHidden=cf299Unique(hidden).filter(name=>!cf316Has(visible,name)),encoded=[...visible.map(name=>`${name}|||${String(emojis?.[name]||cf300DefaultEmoji[type]?.[name]||'🏷️').replace(/\|/g,'')}`),...cleanHidden.map(name=>`__OCULTA__::${name}|||🏷️`)];
+    const {data:rows,error}=await supabaseClient.from('custom_categories').select('id').eq('type',type).eq('user_id',ownerId);if(error)throw error;
+    const primary=rows?.[0],result=primary?await supabaseClient.from('custom_categories').update({categories:encoded}).eq('id',primary.id):await supabaseClient.from('custom_categories').insert({user_id:ownerId,type,categories:encoded});if(result.error)throw result.error;
+    const duplicateIds=(rows||[]).slice(1).map(row=>row.id).filter(Boolean);if(duplicateIds.length){const cleanup=await supabaseClient.from('custom_categories').delete().in('id',duplicateIds);if(cleanup.error)console.warn(cleanup.error);}
+  }
+  cf315Edit=async function(ownerId,type,index){
+    const catalog=cf315Catalog(ownerId,type),oldName=catalog.names[index];if(!oldName)return;const name=prompt('Nombre de la categoría:',oldName);if(name===null)return;const clean=String(name).trim();if(!clean){showToast('El nombre no puede estar vacío','error');return;}const emoji=prompt('Emoji de la categoría:',catalog.emojis[oldName]||cf300DefaultEmoji[type]?.[oldName]||'🏷️');if(emoji===null)return;if(catalog.names.some(item=>item!==oldName&&cf316SameName(item,clean))){showToast('Ya existe una categoría con ese nombre','error');return;}
+    try{const names=catalog.names.map(item=>item===oldName?clean:item),emojis={...catalog.emojis};delete emojis[oldName];emojis[clean]=String(emoji).trim()||'🏷️';const owners=ownerId==='common'?[...new Set(cf315AllRows.filter(row=>row.type===type&&row.user_id).map(row=>String(row.user_id)))]:[ownerId];if(!owners.length&&ownerId==='common')owners.push(String(currentUser.id));await Promise.all(owners.map(id=>cf316SaveOne(id,type,names,emojis,catalog.hidden)));if(clean!==oldName){const personal=ownerId!=='common',filter=query=>personal?query.eq('user_id',ownerId):query;const results=await Promise.all([filter(supabaseClient.from('transactions').update({category:clean}).eq('type',type).eq('category',oldName)),filter(supabaseClient.from('budgets').update({category:clean}).eq('type',type).eq('category',oldName)),supabaseClient.from('fixed_expenses').update({category:clean}).eq('type',type).eq('category',oldName)]),failed=results.find(result=>result.error);if(failed)throw failed.error;}
+      cf314SharedCategoryRows=null;invalidateCache();dataCache=null;await getData(true);await cf315OpenPanel();showToast('Categoría actualizada','success');
+    }catch(error){console.error(error);showToast('No se pudo actualizar la categoría: '+error.message,'error');}
+  };
+  async function cf316Delete(ownerId,type,index){
+    const catalog=cf315Catalog(ownerId,type),name=catalog.names[index];if(!name)return;if(!confirm(`¿Quitar “${name}” solo del catálogo de ${cf315OwnerName(ownerId)}?\n\nLos movimientos antiguos no se eliminarán.`))return;
+    try{const names=catalog.names.filter(item=>item!==name),hidden=[...catalog.hidden,name],owners=ownerId==='common'?[...new Set(cf315AllRows.filter(row=>row.type===type&&row.user_id).map(row=>String(row.user_id)))]:[ownerId];if(!owners.length&&ownerId==='common')owners.push(String(currentUser.id));await Promise.all(owners.map(id=>cf316SaveOne(id,type,names,catalog.emojis,hidden)));cf314SharedCategoryRows=null;invalidateCache();dataCache=null;await getData(true);await cf315OpenPanel();showToast('Categoría eliminada del catálogo','success');}catch(error){console.error(error);showToast('No se pudo eliminar la categoría: '+error.message,'error');}
+  }
+  document.head.insertAdjacentHTML('beforeend',`<style>.cf316-category{display:grid;grid-template-columns:minmax(0,1fr) 34px;gap:5px;align-items:stretch}.cf316-category .cf315-category{width:100%}.cf316-delete{border:1px solid #f0e5e2;border-radius:13px;background:#fff8f6;color:#c78072;font-size:10px}.cf316-delete:hover{background:#fff0ec;color:#b65f52}@media(max-width:768px){.cf316-category{grid-template-columns:minmax(0,1fr) 38px}.cf316-delete{border-radius:13px}}</style>`);
   initializeApp();
   </script>
 </body>
