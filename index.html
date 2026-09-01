@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Control Financiero - App Completa</title>
   <link rel="icon" type="image/png" sizes="any" href="favicon.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -17834,7 +17834,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.6.7';
+const CF_APP_VERSION='v2.6.9';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -17864,10 +17864,19 @@ const CF_APP_VERSION='v2.6.7';
     [/eroski/i,'Eroski',{word:'eroski',bg:'#e30613',fg:'#fff'}],
     [/ikea/i,'IKEA',{src:'https://cdn.simpleicons.org/ikea/0058A3'}],
     [/amazon/i,'Amazon',{word:'amazon',bg:'#fff',fg:'#111'}],
+    [/sephora/i,'Sephora',{src:'https://cdn.simpleicons.org/sephora/000000'}],
+    [/druni/i,'Druni',{word:'druni',bg:'#213d7a',fg:'#fff'}],
+    [/stradivarius/i,'Stradivarius',{word:'STRADIVARIUS',bg:'#f7f6f2',fg:'#171717'}],
+    [/massimo\s*dutti/i,'Massimo Dutti',{word:'MASSIMO DUTTI',bg:'#f3ebdf',fg:'#25211d'}],
+    [/pull\s*(?:&|and)\s*bear/i,'Pull&Bear',{word:'PULL&BEAR',bg:'#171717',fg:'#fff'}],
+    [/bershka/i,'Bershka',{word:'BERSHKA',bg:'#f4f3ef',fg:'#181818'}],
+    [/lizarr[aá]n/i,'Lizarrán',{word:'LIZARRÁN',bg:'#cf3e2f',fg:'#fff'}],
+    [/starbucks/i,'Starbucks',{src:'https://cdn.simpleicons.org/starbucks/00754A'}],
     [/zara\s*home/i,'Zara Home',{word:'ZARA HOME',bg:'#fff',fg:'#151515'}],
     [/zara/i,'Zara',{src:'https://cdn.simpleicons.org/zara/000000'}],
     [/vinted/i,'Vinted',{src:'https://cdn.simpleicons.org/vinted/007782'}],
     [/netflix/i,'Netflix',{src:'https://cdn.simpleicons.org/netflix/E50914'}],
+    [/\bdazn\b/i,'DAZN',{src:'https://cdn.simpleicons.org/dazn/000000'}],
     [/hbo\s*(max)?|\bmax\b/i,'HBO Max',{src:'assets/logos/hbo.svg'}],
     [/disney\s*\+|disneyplus/i,'Disney+',{word:'Disney+',bg:'#123687',fg:'#fff'}],
     [/prime\s*video|amazon\s*prime/i,'Prime Video',{word:'prime',bg:'#08a8e8',fg:'#fff'}],
@@ -17891,7 +17900,7 @@ const CF_APP_VERSION='v2.6.7';
     [/\babanca\b/i,'ABANCA',{word:'ABANCA',bg:'#152a75',fg:'#fff'}],
     [/\bbbva\b/i,'BBVA',{word:'BBVA',bg:'#004481',fg:'#fff'}],
     [/banco\s*sabadell|\bsabadell\b/i,'Banco Sabadell',{src:'assets/logos/banco-sabadell.svg'}],
-    [/trade\s*republic/i,'Trade Republic',{word:'TR',bg:'#142c21',fg:'#fff'}],
+    [/trade\s*republic/i,'Trade Republic',{src:'https://cdn.simpleicons.org/traderepublic/000000'}],
     [/bitvavo/i,'Bitvavo',{word:'bitvavo',bg:'#2f4bd9',fg:'#fff'}],
     [/binance/i,'Binance',{word:'◆',bg:'#f3ba2f',fg:'#151515'}],
     [/tiger\s*(brokers?|trade)?/i,'Tiger Brokers',{word:'TIGER',bg:'#f57b20',fg:'#fff'}],
@@ -19158,6 +19167,11 @@ const CF_APP_VERSION='v2.6.7';
     if(shouldLink){invalidateCache();const fresh=await getData(true),dateKey=String(candidate.date).slice(0,10),created=(fresh.transactions||[]).find(transaction=>transaction.type===type&&transaction.account===account&&String(transaction.date).slice(0,10)===dateKey&&Math.abs(Math.abs(Number(transaction.amount)||0)-candidate.amount)<.02&&cf307FixedText(transaction.description)===cf307FixedText(description));if(created)await cf307LinkFixedPayment(match,created);}
     return output;
   };
+  /* v2.6.8 — Ajustes táctiles y nuevas marcas del historial. */
+  document.head.insertAdjacentHTML('beforeend',`<style>@media(max-width:768px){
+    html{touch-action:manipulation}.cf258-transaction input,.cf258-transaction select,.cf258-transaction textarea,.cf306-category-modal input,.cf306-category-modal select{font-size:16px!important}
+    .cf258-category-picker{padding:4px 3px 8px!important;overflow:visible!important}.cf258-category-choice{overflow:visible!important;padding:2px 0 4px!important}.cf258-category-choice span,.cf258-category-choice.selected span{box-sizing:border-box!important;outline:0!important}.cf258-category-choice.selected span{box-shadow:inset 0 0 0 2px #6d9e6d!important}
+  }</style>`);
   initializeApp();
   </script>
 </body>
