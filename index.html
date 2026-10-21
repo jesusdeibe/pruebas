@@ -7014,6 +7014,7 @@ canvas {
               <option value="Cuenta Corriente">Cuenta Corriente</option>
               <option value="Cuenta Ahorro">Cuenta Ahorro</option>
               <option value="Cuenta Compartida">Cuenta Compartida</option>
+              <option value="Tarjeta de crédito">Tarjeta de crédito</option>
               <option value="Broker">Broker</option>
               <option value="Exchange Crypto">Exchange Crypto</option>
               <option value="Otro">Otro</option>
@@ -7082,6 +7083,7 @@ canvas {
               <option value="Cuenta Corriente">Cuenta Corriente</option>
               <option value="Cuenta Ahorro">Cuenta Ahorro</option>
               <option value="Cuenta Compartida">Cuenta Compartida</option>
+              <option value="Tarjeta de crédito">Tarjeta de crédito</option>
               <option value="Broker">Broker</option>
               <option value="Exchange Crypto">Exchange Crypto</option>
               <option value="Otro">Otro</option>
@@ -7334,7 +7336,7 @@ canvas {
           accounts: [], transactions: [], holdings: [], transfers: [], 
           contributions: [], fixedExpenses: [], fixedExpensesPaid: {}, 
           monthlyPatrimony: {}, customCategories: [], budgets: [], 
-          holdingsHistory: [], investmentSales: [], savingGoals: [], wishlist: [] 
+          holdingsHistory: [], investmentSales: [], creditCards: [], savingGoals: [], wishlist: [] 
         };
       }
       
@@ -7368,6 +7370,7 @@ canvas {
           budgets: () => supabaseClient.from('budgets').select('*'),
           holdingsHistory: () => supabaseClient.from('holdings_history').select('*').order('date', { ascending: true }),
           investmentSales: () => supabaseClient.from('investment_sales').select('*').order('sale_date', { ascending: false }),
+          creditCards: () => supabaseClient.from('credit_cards').select('*').order('created_at', { ascending: true }),
           wishlist: () => supabaseClient.from('wishlist').select('*')
         };
 
@@ -7450,6 +7453,7 @@ canvas {
           budgets: validBudgets, 
           holdingsHistory: results.holdingsHistory,
           investmentSales: (results.investmentSales || []).filter(s => s.user_id === currentUser.id).map(s => ({ id:s.id, holdingId:s.holding_id, holdingName:s.holding_name, account:s.account, destinationAccount:s.destination_account, date:s.sale_date, saleAmount:parseFloat(s.sale_amount), costBasis:parseFloat(s.cost_basis), gainLoss:parseFloat(s.gain_loss), taxRate:parseFloat(s.tax_rate), estimatedTax:parseFloat(s.estimated_tax), taxPaid:s.tax_paid === true || s.tax_paid === 'true', taxPaidDate:s.tax_paid_date, notes:s.notes })),
+          creditCards: (results.creditCards || []).filter(card => card.user_id === currentUser.id).map(card => ({ id:card.id, name:card.name, cardAccount:card.card_account, paymentAccount:card.payment_account, paymentDay:Number(card.payment_day), active:card.active !== false && card.active !== 'false' })),
           wishlist: validWishlist, 
           savingGoals: [] 
         };
@@ -15417,7 +15421,7 @@ async function getFixedExpensesAlerts() {
     const totalFixedNeeded = pendingFixedExpenses.reduce((sum, e) => sum + Math.abs(parseFloat(e.amount || 0)), 0);
     
     // 2. Calculamos el saldo de TODAS tus cuentas personales (donde sueles pagar los recibos)
-    const personalAccounts = data.accounts.filter(a => !a.isShared && !a.is_shared && a.type !== 'Broker');
+    const personalAccounts = data.accounts.filter(a => !a.isShared && !a.is_shared && a.type !== 'Broker' && a.type !== 'Tarjeta de crédito');
     let totalPersonalBalance = 0;
     for (const acc of personalAccounts) {
         totalPersonalBalance += await calculateAccountBalance(acc.name);
@@ -15435,7 +15439,7 @@ async function getFixedExpensesAlerts() {
     // Aviso extra: Cuentas en negativo (esto siempre es útil)
     for (const acc of data.accounts) {
         const bal = await calculateAccountBalance(acc.name);
-        if (bal < 0) {
+        if (bal < 0 && acc.type !== 'Tarjeta de crédito') {
             alerts.push({
                 title: "Saldo Negativo",
                 text: `La cuenta <b>${acc.name}</b> está en <b>${formatCurrency(bal)}</b>.`
@@ -17841,7 +17845,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.6.28';
+const CF_APP_VERSION='v2.6.29';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
@@ -19464,7 +19468,7 @@ const CF_APP_VERSION='v2.6.28';
     const allItems=(data.fixedExpenses||[]).filter(item=>item.type===receiptType&&cf320ActiveInMonth(item,month)).sort((a,b)=>(Number(a.day)||99)-(Number(b.day)||99));
     const pending=allItems.filter(item=>!paid.has(item.id));
     const pendingTotal=pending.reduce((sum,item)=>sum+Math.abs(Number(item.amount)||0),0);
-    const accounts=(data.accounts||[]).filter(item=>item.type!=='Broker'&&item.type!=='Exchange Crypto'&&(cf321ReceiptScope==='shared'?isShared(item):!isShared(item)));
+    const accounts=(data.accounts||[]).filter(item=>item.type!=='Broker'&&item.type!=='Exchange Crypto'&&item.type!=='Tarjeta de crédito'&&(cf321ReceiptScope==='shared'?isShared(item):!isShared(item)));
     let selected=localStorage.getItem(cf320ReceiptAccountKey())||'';
     if(selected&&!accounts.some(item=>item.name===selected))selected='';
     const balances={};await Promise.all(accounts.map(async item=>{balances[item.name]=await calculateAccountBalance(item.name);}));
@@ -19606,6 +19610,61 @@ const CF_APP_VERSION='v2.6.28';
     .cf326-home .cf326-activity{margin-top:0!important}.cf326-home .cf2-section-head{margin:0 1px 10px!important}.cf326-home .cf2-section-head h2{color:#192b20!important;font-size:19px!important;font-weight:950!important;letter-spacing:-.6px!important}.cf326-home .cf2-link{color:#52785d!important;font-size:11px!important;font-weight:850!important}.cf326-home .cf2-card{padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}.cf326-home .cf249-date-group{margin:0 0 16px!important}.cf326-home .cf249-date-label{margin:0 2px 6px!important;color:#919891!important;font-size:9px!important;font-weight:950!important;letter-spacing:.7px!important}.cf326-home .cf249-date-group .cf2-movement{margin:0!important;padding:11px 3px!important;border:0!important;border-bottom:1px solid #e8ebe6!important;background:transparent!important;box-shadow:none!important}.cf326-home .cf2-movement-icon{width:38px!important;height:38px!important;border-radius:13px!important}.cf326-home .cf2-movement-title{font-size:13px!important;font-weight:850!important}.cf326-home .cf2-movement-sub{font-size:10px!important}.cf326-home .cf2-movement-amount{font-size:13px!important;font-weight:900!important}
     .cf326-home .cf326-accounts{margin-top:28px!important}.cf326-home .cf2-accounts{display:flex!important;gap:10px!important;overflow-x:auto!important;margin:0 -20px!important;padding:1px 20px 9px!important;border:0!important;background:transparent!important;box-shadow:none!important;scroll-snap-type:x mandatory}.cf326-home .cf2-account{min-width:178px!important;min-height:91px!important;padding:14px!important;border:1px solid #e8e9e4!important;border-radius:19px!important;background:#fff!important;box-shadow:0 5px 14px rgba(30,45,34,.035)!important;scroll-snap-align:start}.cf326-home .cf2-account:first-child{background:#f3faf2!important;border-color:#d8e8d6!important}.cf326-home .cf2-account-icon{width:34px!important;height:34px!important}.cf326-home .cf2-account-name{font-size:10px!important}.cf326-home .cf2-account-balance{font-size:15px!important;color:#1d3325!important}.cf326-home .cf2-section:has(.cf2-budget){margin-top:24px!important}.cf326-home .cf2-budget{padding:15px!important;border:1px solid #e6e8e2!important;border-radius:18px!important;background:#fff!important;box-shadow:none!important}
   }</style>`);
+  /* v2.6.29 — Tarjetas de crédito: gasto hoy, cobro y reserva al final de ciclo. */
+  function cf329Esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
+  function cf329ActiveCards(data){return (data.creditCards||[]).filter(function(card){return card.active;});}
+  function cf329DueDate(day){var now=new Date(),safe=Math.min(Math.max(1,Number(day)||1),31),due=new Date(now.getFullYear(),now.getMonth(),Math.min(safe,new Date(now.getFullYear(),now.getMonth()+1,0).getDate()));if(due<new Date(now.getFullYear(),now.getMonth(),now.getDate()))due=new Date(now.getFullYear(),now.getMonth()+1,Math.min(safe,new Date(now.getFullYear(),now.getMonth()+2,0).getDate()));return due;}
+  function cf329DueLabel(day){return cf329DueDate(day).toLocaleDateString('es-ES',{day:'numeric',month:'long'});}
+  async function cf329Snapshots(data){return Promise.all(cf329ActiveCards(data).map(async function(card){var balance=await calculateAccountBalance(card.cardAccount);return Object.assign({},card,{pending:Math.max(0,-Number(balance||0)),due:cf329DueDate(card.paymentDay)});}));}
+  function cf329CloseManager(){document.getElementById('cf329-manager')?.remove();}
+  async function cf329OpenManager(){
+    var data=await getData(true),cards=await cf329Snapshots(data),rows=cards.length?cards.map(function(card){return '<article class="cf329-card-row"><span class="cf329-card-icon"><i class="fas fa-credit-card"></i></span><span class="cf329-card-copy"><b>'+cf329Esc(card.name)+'</b><small>Cobro el '+cf329Esc(cf329DueLabel(card.paymentDay))+' desde '+cf329Esc(card.paymentAccount)+'</small></span><strong>'+formatCurrency(card.pending)+'</strong><button class="cf329-settle" onclick="cf329Settle(\''+card.id+'\')" '+(card.pending<=0?'disabled':'')+'>'+ (card.pending>0?'Registrar cobro':'Al día') +'</button></article>';}).join(''):'<div class="cf329-empty"><i class="fas fa-credit-card"></i><b>Aún no tienes tarjetas configuradas</b><span>Registra los pagos al momento y reserva el dinero para el cobro mensual.</span></div>';
+    document.body.insertAdjacentHTML('beforeend','<div id="cf329-manager" class="cf329-overlay"><main class="cf329-sheet"><header class="cf329-head"><button onclick="cf329CloseManager()" aria-label="Cerrar"><i class="fas fa-arrow-left"></i></button><span><small>PLANIFICACIÓN</small><h2>Tarjetas de crédito</h2></span><button class="cf329-close" onclick="cf329CloseManager()" aria-label="Cerrar">&times;</button></header><p class="cf329-intro">Los gastos cuentan desde el día en que pagas. Aquí solo controlas cuánto tendrás que reservar para que el banco cobre la tarjeta.</p><button class="cf329-new" onclick="cf329OpenNewCard()"><i class="fas fa-plus"></i> Añadir tarjeta</button><section class="cf329-list">'+rows+'</section></main></div>');
+  }
+  async function cf329OpenNewCard(){
+    var data=await getData(),accounts=(data.accounts||[]).filter(function(account){return account.type!=='Broker'&&account.type!=='Exchange Crypto'&&account.type!=='Tarjeta de crédito'&&!(account.isShared===true||account.is_shared===true);});
+    if(!accounts.length){showToast('Primero crea o conserva una cuenta personal para el cobro','error');return;}
+    var options=accounts.map(function(account){return '<option value="'+cf329Esc(account.name)+'">'+cf329Esc(account.name)+'</option>';}).join('');
+    var sheet=document.querySelector('#cf329-manager .cf329-sheet');if(!sheet)return;
+    sheet.innerHTML='<header class="cf329-head"><button onclick="cf329OpenManager()" aria-label="Volver"><i class="fas fa-arrow-left"></i></button><span><small>NUEVA CONFIGURACIÓN</small><h2>Tarjeta de crédito</h2></span><button class="cf329-close" onclick="cf329CloseManager()" aria-label="Cerrar">&times;</button></header><p class="cf329-intro">La tarjeta será una cuenta virtual. Cuando registres un pago, el importe quedará pendiente hasta que se cobre desde tu cuenta.</p><label class="cf329-label">Nombre de la tarjeta<input id="cf329-name" class="form-input" placeholder="Ej. Visa Santander"></label><label class="cf329-label">Importe pendiente ahora<input id="cf329-pending" type="number" min="0" step="0.01" inputmode="decimal" value="0" class="form-input" placeholder="0,00"></label><label class="cf329-label">¿Desde qué cuenta se cobra?<select id="cf329-payment" class="form-select">'+options+'</select></label><label class="cf329-label">Día habitual de cobro<select id="cf329-day" class="form-select">'+Array.from({length:31},function(_,index){var day=index+1;return '<option value="'+day+'">Día '+day+'</option>';}).join('')+'</select></label><button class="cf329-save" onclick="cf329SaveNewCard()">Guardar tarjeta</button>';
+  }
+  async function cf329SaveNewCard(){
+    var name=document.getElementById('cf329-name')?.value.trim(),payment=document.getElementById('cf329-payment')?.value,day=Number(document.getElementById('cf329-day')?.value),pending=Number(document.getElementById('cf329-pending')?.value||0);if(!name||!payment||!Number.isInteger(day)||pending<0||!Number.isFinite(pending)){showToast('Completa los datos de la tarjeta','error');return;}
+    var data=await getData();if((data.accounts||[]).some(function(account){return account.name.localeCompare(name,'es',{sensitivity:'accent'})===0;})){showToast('Ya existe una cuenta o tarjeta con ese nombre','error');return;}
+    var accountResult=await supabaseClient.from('accounts').insert({user_id:currentUser.id,name:name,type:'Tarjeta de crédito',color:'#7657a8',initial_balance:-pending,include_in_patrimony:true,is_disposable:false}).select().single();
+    if(accountResult.error){showToast('No se pudo crear la tarjeta: '+accountResult.error.message,'error');return;}
+    var cardResult=await supabaseClient.from('credit_cards').insert({user_id:currentUser.id,name:name,card_account:name,payment_account:payment,payment_day:day,active:true});
+    if(cardResult.error){await supabaseClient.from('accounts').delete().eq('id',accountResult.data.id);showToast('Falta preparar la tabla de tarjetas en Supabase. Ejecuta primero el SQL de esta versión.','error');return;}
+    invalidateCache();showToast('Tarjeta configurada correctamente','success');await cf329OpenManager();
+  }
+  async function cf329Settle(cardId){
+    var data=await getData(true),card=cf329ActiveCards(data).find(function(item){return item.id===cardId;});if(!card)return;var balance=await calculateAccountBalance(card.cardAccount),pending=Math.max(0,-Number(balance||0));if(!pending){showToast('Esta tarjeta ya está al día','info');return;}if(!confirm('¿Registrar el cobro de '+formatCurrency(pending)+' desde '+card.paymentAccount+'?'))return;
+    var result=await supabaseClient.from('transfers').insert({user_id:currentUser.id,date:new Date().toISOString().slice(0,10),from_account:card.paymentAccount,to_account:card.cardAccount,amount:pending,concept:'Cobro tarjeta · '+card.name});
+    if(result.error){showToast('No se pudo registrar el cobro: '+result.error.message,'error');return;}
+    invalidateCache();showToast('Cobro de tarjeta registrado','success');cf329CloseManager();if(window.innerWidth<=768){await renderMobileDashboard();}else{await renderDashboard();}
+  }
+  async function cf329AddHomeNotice(){
+    var home=document.querySelector('.cf2-home');if(!home||home.querySelector('.cf329-home-card'))return;var data=await getData(),cards=(await cf329Snapshots(data)).filter(function(card){return card.pending>0;});if(!cards.length)return;var card=cards.sort(function(a,b){return a.due-b.due;})[0],receipt=home.querySelector('.cf252-receipts'),hero=home.querySelector('.cf249-hero'),target=receipt||hero;if(!target)return;
+    target.insertAdjacentHTML('afterend','<button class="cf329-home-card" onclick="cf329OpenManager()"><span><i class="fas fa-credit-card"></i></span><b>Tarjeta pendiente</b><small>'+cf329Esc(card.name)+' · cobro el '+cf329Esc(cf329DueLabel(card.paymentDay))+' desde '+cf329Esc(card.paymentAccount)+'</small><strong>'+formatCurrency(card.pending)+'</strong><i class="fas fa-chevron-right"></i></button>');
+  }
+  const renderMobileDashboardV329=renderMobileDashboard;
+  renderMobileDashboard=async function(){var output=await renderMobileDashboardV329();if(window.innerWidth<=768)await cf329AddHomeNotice();return output;};
+  async function cf329AddReceiptNotice(){
+    var page=document.querySelector('.cf320-page');if(!page||page.querySelector('.cf329-receipt-card'))return;var data=await getData(),selected=localStorage.getItem(cf320ReceiptAccountKey())||'',cards=(await cf329Snapshots(data)).filter(function(card){return card.pending>0&&(!selected||card.paymentAccount===selected);});if(!cards.length)return;var card=cards.sort(function(a,b){return a.due-b.due;})[0],anchor=page.querySelector('.cf320-pending');if(!anchor)return;
+    anchor.insertAdjacentHTML('afterend','<button class="cf329-receipt-card" onclick="cf329OpenManager()"><span><i class="fas fa-credit-card"></i></span><span><small>RESERVA PARA TARJETA</small><b>'+cf329Esc(card.name)+' · '+cf329Esc(card.paymentAccount)+'</b><em>Se cobrará el '+cf329Esc(cf329DueLabel(card.paymentDay))+'</em></span><strong>'+formatCurrency(card.pending)+'</strong><i class="fas fa-chevron-right"></i></button>');
+  }
+  const renderMobileReceiptsV329=renderMobileReceipts;
+  renderMobileReceipts=async function(){var output=await renderMobileReceiptsV329();if(window.innerWidth<=768)await cf329AddReceiptNotice();return output;};
+  async function cf329AddDesktopNotice(){
+    if(window.innerWidth<=768)return;var host=document.getElementById('dashboard-upcoming-expenses');if(!host||host.querySelector('.cf329-desktop-notice'))return;var data=await getData(),cards=(await cf329Snapshots(data)).filter(function(card){return card.pending>0;});if(!cards.length)return;var card=cards.sort(function(a,b){return a.due-b.due;})[0];host.insertAdjacentHTML('beforeend','<button class="cf329-desktop-notice" onclick="cf329OpenManager()"><i class="fas fa-credit-card"></i><span><b>Tarjeta pendiente</b><small>'+cf329Esc(card.name)+' · '+cf329Esc(card.paymentAccount)+' · '+cf329Esc(cf329DueLabel(card.paymentDay))+'</small></span><strong>'+formatCurrency(card.pending)+'</strong></button>');
+  }
+  const renderDashboardV329=renderDashboard;
+  renderDashboard=async function(){var output=await renderDashboardV329();await cf329AddDesktopNotice();return output;};
+  const renderMobileMoreV329=renderMobileMore;
+  renderMobileMore=function(){renderMobileMoreV329();var page=document.querySelector('.cf207-page');if(!page||page.querySelector('.cf329-profile-entry'))return;var section=document.createElement('section');section.className='cf207-section cf329-profile-entry';section.innerHTML='<div class="cf207-section-title">Planificación</div><div class="cf207-panel"><button class="cf207-row" onclick="cf329OpenManager()"><span class="cf207-icon" style="background:#f1ecfa;color:#7657a8"><i class="fas fa-credit-card"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Tarjetas de crédito</span><span class="cf207-row-sub">Controla el importe pendiente y el cobro mensual</span></span><i class="fas fa-chevron-right"></i></button></div>';page.querySelector('.cf302-wallet-section')?.before(section)||page.appendChild(section);};
+  const renderSettingsViewV329=renderSettingsView;
+  renderSettingsView=async function(){var output=await renderSettingsViewV329();var root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf329-desktop-entry'))root.insertAdjacentHTML('afterbegin','<section class="section cf329-desktop-entry"><div class="section-header"><div><h2 class="section-title"><span>💳</span> Tarjetas de crédito</h2><p class="page-subtitle" style="margin:6px 0 0">Registra compras hoy y reserva el importe del cobro mensual.</p></div><button class="btn-primary" onclick="cf329OpenManager()">Gestionar tarjetas</button></div></section>');return output;};
+  document.head.insertAdjacentHTML('beforeend','<style>.cf329-overlay{position:fixed;z-index:12000;inset:0;overflow:auto;background:rgba(24,34,27,.38);backdrop-filter:blur(5px)}.cf329-sheet{width:min(620px,100%);min-height:100%;box-sizing:border-box;margin:0 auto;padding:28px;background:#f8faf6;color:#263127}.cf329-head{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;gap:11px;align-items:center}.cf329-head button{width:42px;height:42px;border:0;border-radius:14px;background:#fff;color:#536055;font-size:15px;box-shadow:0 4px 12px rgba(35,48,38,.06)}.cf329-head small,.cf329-label{color:#7a867b;font-size:10px;font-weight:900;letter-spacing:.6px;text-transform:uppercase}.cf329-head h2{margin:3px 0 0;color:#253128;font-size:25px;font-weight:950;letter-spacing:-.7px}.cf329-close{font-size:24px!important}.cf329-intro{margin:19px 0;color:#718073;font-size:12px;font-weight:700;line-height:1.45}.cf329-new,.cf329-save{display:flex;width:100%;min-height:51px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:16px;background:#72569f;color:#fff;font:900 13px inherit;box-shadow:0 10px 20px rgba(100,75,145,.2)}.cf329-list{display:grid;gap:10px;margin-top:18px}.cf329-card-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:14px;border:1px solid #e2e5df;border-radius:19px;background:#fff}.cf329-card-icon,.cf329-receipt-card>span:first-child{width:40px;height:40px;display:grid;place-items:center;border-radius:13px;background:#f1ecfa;color:#7657a8}.cf329-card-copy{min-width:0}.cf329-card-copy b,.cf329-card-copy small{display:block}.cf329-card-copy b{overflow:hidden;font-size:13px;font-weight:950;text-overflow:ellipsis;white-space:nowrap}.cf329-card-copy small{margin-top:3px;color:#79847a;font-size:10px;font-weight:700}.cf329-card-row>strong{color:#493870;font-size:14px;font-weight:950;white-space:nowrap}.cf329-settle{grid-column:2/4;min-height:35px;border:0;border-radius:11px;background:#eee8f8;color:#62478f;font:850 10px inherit}.cf329-settle:disabled{background:#f1f3f0;color:#9ca49c}.cf329-empty{display:grid;justify-items:center;gap:7px;padding:31px 20px;border:1px dashed #dce2d9;border-radius:20px;color:#788378;text-align:center}.cf329-empty i{font-size:23px;color:#8d73b6}.cf329-empty b{color:#354136;font-size:13px}.cf329-empty span{font-size:11px;font-weight:700;line-height:1.4}.cf329-label{display:block;margin-top:15px}.cf329-label input,.cf329-label select{display:block;width:100%;box-sizing:border-box;margin-top:7px;text-transform:none;letter-spacing:0}.cf329-save{margin-top:22px}@media(max-width:768px){.cf329-sheet{padding:20px 20px calc(116px + env(safe-area-inset-bottom,0px));background:#f8faf6}.cf329-overlay{background:#f8faf6}.cf329-home-card,.cf329-receipt-card{display:grid;width:100%;box-sizing:border-box;grid-template-columns:38px minmax(0,1fr) auto 10px;gap:10px;align-items:center;border:1px solid #e4def0;border-radius:20px;background:#fff;color:#253028;text-align:left}.cf329-home-card{margin:0 0 27px;padding:13px}.cf329-receipt-card{margin-top:12px;padding:13px}.cf329-home-card>span,.cf329-receipt-card>span:first-child{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:#f0ecf8;color:#7657a8}.cf329-home-card b{display:none}.cf329-home-card small,.cf329-receipt-card span:nth-child(2) small,.cf329-receipt-card span:nth-child(2) b,.cf329-receipt-card span:nth-child(2) em{display:block}.cf329-home-card small,.cf329-receipt-card span:nth-child(2) b{overflow:hidden;font-size:11px;font-style:normal;font-weight:850;text-overflow:ellipsis;white-space:nowrap}.cf329-receipt-card span:nth-child(2) small{margin-bottom:2px;color:#827993;font-size:8px;font-weight:950;letter-spacing:.55px}.cf329-receipt-card span:nth-child(2) em{margin-top:3px;color:#828b83;font-size:9px;font-style:normal;font-weight:700}.cf329-home-card strong,.cf329-receipt-card strong{color:#59417f;font-size:13px;font-weight:950;white-space:nowrap}.cf329-home-card>i,.cf329-receipt-card>i{color:#abb1a9;font-size:10px}.cf329-desktop-entry{display:none!important}}@media(min-width:769px){.cf329-desktop-notice{display:grid;width:100%;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:15px;padding:11px;border:1px solid #e1d9ef;border-radius:13px;background:#fbf9ff;color:#493870;text-align:left}.cf329-desktop-notice>i{display:grid;width:30px;height:30px;place-items:center;border-radius:9px;background:#f0eafa}.cf329-desktop-notice span{min-width:0}.cf329-desktop-notice b,.cf329-desktop-notice small{display:block}.cf329-desktop-notice b{font:850 11px inherit}.cf329-desktop-notice small{overflow:hidden;margin-top:2px;color:#7b7589;font-size:9px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}.cf329-desktop-notice strong{font-size:12px;white-space:nowrap}}</style>');
   initializeApp();
   </script>
 </body>
