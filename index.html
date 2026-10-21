@@ -7339,21 +7339,36 @@ canvas {
       }
       
       try {
-        // 1. CARGA INTELIGENTE (Tu lógica robusta de promesas)
+        // 1. CARGA COMPLETA. Supabase limita cada respuesta; sin paginar, al
+        // crecer el historial podían faltar movimientos antiguos y descuadrar
+        // los saldos. Cada tabla se reúne por páginas antes de calcular nada.
+        const fetchAllRows = async (createQuery) => {
+          const pageSize = 1000;
+          const allRows = [];
+          let from = 0;
+          while (true) {
+            const { data, error } = await createQuery().range(from, from + pageSize - 1);
+            if (error) return { data: allRows, error };
+            const rows = data || [];
+            allRows.push(...rows);
+            if (rows.length < pageSize) return { data: allRows, error: null };
+            from += pageSize;
+          }
+        };
         const queries = {
-          accounts: supabaseClient.from('accounts').select('*').order('name'),
-          transactions: supabaseClient.from('transactions').select('*').order('date', { ascending: false }),
-          holdings: supabaseClient.from('holdings').select('*').order('name'),
-          transfers: supabaseClient.from('transfers').select('*').order('date', { ascending: false }),
-          contributions: supabaseClient.from('contributions').select('*'),
-          fixedExpenses: supabaseClient.from('fixed_expenses').select('*').order('name'),
-          fixedExpensesPaid: supabaseClient.from('fixed_expenses_paid').select('*'),
-          monthlyPatrimony: supabaseClient.from('monthly_patrimony').select('*'),
-          customCategories: supabaseClient.from('custom_categories').select('*'),
-          budgets: supabaseClient.from('budgets').select('*'),
-          holdingsHistory: supabaseClient.from('holdings_history').select('*').order('date', { ascending: true }),
-          investmentSales: supabaseClient.from('investment_sales').select('*').order('sale_date', { ascending: false }),
-          wishlist: supabaseClient.from('wishlist').select('*')
+          accounts: () => supabaseClient.from('accounts').select('*').order('name'),
+          transactions: () => supabaseClient.from('transactions').select('*').order('date', { ascending: false }),
+          holdings: () => supabaseClient.from('holdings').select('*').order('name'),
+          transfers: () => supabaseClient.from('transfers').select('*').order('date', { ascending: false }),
+          contributions: () => supabaseClient.from('contributions').select('*'),
+          fixedExpenses: () => supabaseClient.from('fixed_expenses').select('*').order('name'),
+          fixedExpensesPaid: () => supabaseClient.from('fixed_expenses_paid').select('*'),
+          monthlyPatrimony: () => supabaseClient.from('monthly_patrimony').select('*'),
+          customCategories: () => supabaseClient.from('custom_categories').select('*'),
+          budgets: () => supabaseClient.from('budgets').select('*'),
+          holdingsHistory: () => supabaseClient.from('holdings_history').select('*').order('date', { ascending: true }),
+          investmentSales: () => supabaseClient.from('investment_sales').select('*').order('sale_date', { ascending: false }),
+          wishlist: () => supabaseClient.from('wishlist').select('*')
         };
 
         const results = {};
@@ -7361,7 +7376,7 @@ canvas {
         
         const responses = await Promise.all(keys.map(async (key) => {
           try {
-            const res = await queries[key];
+            const res = await fetchAllRows(queries[key]);
             return res;
           } catch (e) {
             return { error: e };
@@ -17826,7 +17841,7 @@ function getPublicPrioColors(prio) {
   const renderMobileMoreV257Wallet=renderMobileMore;
   renderMobileMore=function(){renderMobileMoreV257Wallet();cf257GetWalletPending().then(pending=>{const panel=document.querySelector('.cf207-page .cf207-panel');if(!panel||panel.querySelector('.cf257-profile-wallet'))return;panel.insertAdjacentHTML('beforeend',`<button class="cf207-row cf257-profile-wallet" onclick="cf257OpenPending()"><span class="cf207-icon" style="background:#eff1ee;color:#3c4b43"><i class="fab fa-apple"></i></span><span class="cf207-row-main"><span class="cf207-row-title">Pagos de Apple Wallet ${cf257PendingBadge(pending.length)}</span><span class="cf207-row-sub">${pending.length?'Tienes pagos pendientes de validar':'Configura la captura automática con Atajos'}</span></span><i class="fas fa-chevron-right"></i></button>`);});};
   /* v2.5.47 — Marcas vectoriales nítidas, sin favicons. */
-const CF_APP_VERSION='v2.6.27';
+const CF_APP_VERSION='v2.6.28';
   document.head.insertAdjacentHTML('beforeend', `<style>.cf262-brand img{image-rendering:auto;filter:contrast(1.08) saturate(1.12)}.cf262-fallback{opacity:1!important;color:#334138!important}.no-attachment-icon.cf263-merchant-slot{opacity:1!important;color:#334138!important}@media(min-width:769px){.no-attachment-icon.cf263-merchant-slot{background:#fff!important;box-shadow:0 1px 4px rgba(35,47,38,.09)!important}.no-attachment-icon.cf263-merchant-slot .cf262-fallback{font-size:14px!important}.cf265-desktop-version{margin:30px 4px 14px;text-align:center;color:#a0a7a0;font-size:10px;font-weight:800;letter-spacing:.5px}}@media(max-width:768px){.cf265-mobile-version{margin:26px 0 calc(22px + env(safe-area-inset-bottom,0px));text-align:center;color:#9ca49d;font-size:10px;font-weight:800;letter-spacing:.55px}.cf262-brand img{padding:2px!important}}</style>`);
   const renderSettingsViewV265=renderSettingsView;
   renderSettingsView=async function(){const output=await renderSettingsViewV265();if(window.innerWidth>768){const root=document.getElementById('settings-view');if(root&&!root.querySelector('.cf265-desktop-version'))root.insertAdjacentHTML('beforeend',`<div class="cf265-desktop-version">Control Financiero · ${CF_APP_VERSION}</div>`);}return output;};
